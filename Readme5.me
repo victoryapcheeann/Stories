@@ -1,0 +1,45 @@
+Yes, centralizing API calls and managing them effectively aligns with **Clean Code Principles**, particularly those related to **code maintainability, simplicity, and efficiency**. Here are the relevant clean code principles that apply:
+
+### 1. **DRY (Don’t Repeat Yourself)**
+One of the core principles of clean code is to avoid redundancy. By decentralizing API calls, you often end up repeating the same code across different components, such as fetching the same data, handling the same errors, and managing the same token refresh logic.
+
+Centralizing API calls allows you to adhere to the **DRY principle** by writing the logic in one place, making the code easier to maintain and less error-prone.
+
+### 2. **Separation of Concerns**
+Decentralizing API calls can blur the separation of concerns in your application. For example, components should focus on rendering UI and handling user interactions, not managing API requests and caching. If API calls are scattered across various components, the components take on more responsibilities than they should, violating the **Single Responsibility Principle** (SRP).
+
+Centralizing API calls helps you adhere to **separation of concerns** by isolating data-fetching logic from UI logic, improving code modularity and maintainability.
+
+### 3. **KISS (Keep It Simple, Stupid)**
+Complexity arises when API calls are scattered across an application, making it harder to reason about where data is coming from or why certain performance issues occur. Centralizing API logic simplifies the structure of the application by consolidating similar responsibilities (data fetching, token management, caching) into one place.
+
+This follows the **KISS principle** by keeping the codebase simpler and easier to understand.
+
+### 4. **Single Source of Truth (SSOT)**
+When API calls and data are handled inconsistently across components, you risk violating the **Single Source of Truth** principle. This principle emphasizes that there should be one place where the truth (or the source of data) is maintained. If data is fetched in multiple places without a centralized management system, you may end up with different parts of your application using outdated or inconsistent data.
+
+Centralizing API calls and data management ensures that your application has a single, consistent source of data that can be relied upon, aligning with the **SSOT principle**.
+
+### 5. **Error Handling and Resilience**
+Scattered API calls often lead to inconsistent error handling. Different components may handle errors differently, leading to code that's hard to debug and maintain. Clean code principles advocate for **consistent error handling** across the application.
+
+Centralizing API logic ensures that errors are handled in a uniform and predictable way, improving the code's resilience and debuggability.
+
+### 6. **Open/Closed Principle (OCP)**
+The **Open/Closed Principle** states that your code should be open for extension but closed for modification. Decentralized API calls violate this principle because every time you need to add or modify API-related logic (e.g., caching, token refresh), you may have to modify multiple components.
+
+By centralizing API logic, you can extend functionality in one place (such as adding token refresh logic) without modifying every component, thereby adhering to the **OCP**.
+
+### 7. **Maintainability and Scalability**
+Decentralized API calls make your codebase harder to maintain, as adding or updating API-related functionality becomes time-consuming and error-prone. Clean code principles emphasize writing maintainable and scalable code.
+
+Centralized API handling makes it easier to maintain and scale the application, as you have one place to optimize network requests, add caching, or change authentication logic. This supports the clean code goals of **maintainability and scalability**.
+
+### 8. **Minimizing Side Effects**
+When API calls are not centralized, side effects—such as unexpected network requests, data inconsistencies, or token mismanagement—can arise in different parts of the application. Clean code principles suggest minimizing side effects to ensure predictable behavior.
+
+By centralizing API logic, you can control when and how API calls are made, thereby reducing unintended side effects and improving the reliability of your code.
+
+---
+
+In summary, centralizing API calls adheres to several clean code principles, making your code more **efficient, maintainable, scalable, and easier to debug**. These practices help reduce redundancy, keep responsibilities clear, and ensure consistency across your codebase.
