@@ -1,0 +1,120 @@
+// apiService.js
+import apiClient from './axiosInstance';
+
+export const apiCall = async (endpoint, method = 'GET', data = null, options = {}) => {
+  try {
+    const response = await apiClient({
+      url: endpoint,
+      method,
+      data,
+    });
+
+    // Centralized status code handling with custom message
+    if (response.status === 200) {
+      return {
+        success: true,
+        data: response.data,
+        message: options.successMessage || 'Request successful',  // Custom or default message
+      };
+    } else if (response.status === 201) {
+      return {
+        success: true,
+        data: response.data,
+        message: options.successMessage || 'Resource created successfully',
+      };
+    } else if (response.status === 204) {
+      return {
+        success: true,
+        data: null,
+        message: options.successMessage || 'No content',
+      };
+    } else {
+      return {
+        success: false,
+        error: `Unexpected status code: ${response.status}`,
+      };
+    }
+  } catch (error) {
+    // Centralized error handling
+    return {
+      success: false,
+      error: error.message || 'An unknown error occurred',
+    };
+  }
+};
+
+
+// ExampleComponent.js
+import React, { useState, useEffect } from 'react';
+import { apiCall } from './apiService';
+
+const ExampleComponent = () => {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState(null);  // For custom messages
+  const [loading, setLoading] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+
+    // Passing a custom success message for a 200 status
+    const result = await apiCall('/example', 'GET', null, { successMessage: 'Data fetched successfully!' });
+
+    if (result.success) {
+      setData(result.data);  // Set the fetched data
+      setMessage(result.message);  // Use the custom success message
+    } else {
+      setError(result.error);  // Handle the error
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      {loading && <p>Loading...</p>}
+      {error && <p>Error: {error}</p>}
+      {message && <p>{message}</p>}  {/* Display the custom message */}
+      {data && <p>Data: {JSON.stringify(data)}</p>}
+    </div>
+  );
+};
+
+export default ExampleComponent;
+
+
+// apiService.js
+export const apiCall = async (endpoint, method = 'GET', data = null, options = {}) => {
+  try {
+    const response = await apiClient({
+      url: endpoint,
+      method,
+      data,
+    });
+
+    if (response.status === 200) {
+      return {
+        success: true,
+        data: response.data,
+        message: options.successMessage || 'Request successful',
+      };
+    }
+    // Add more status handling if necessary
+  } catch (error) {
+    // Use a custom error message if provided, or default to the API error message
+    return {
+      success: false,
+      error: options.errorMessage || error.message || 'An unknown error occurred',
+    };
+  }
+};
+
+
+const result = await apiCall('/example', 'GET', null, {
+  successMessage: 'Custom success!',
+  errorMessage: 'Failed to fetch data!',
+});
