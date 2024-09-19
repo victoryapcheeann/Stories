@@ -1,0 +1,90 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+
+function App() {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState('');
+
+  const handleFileInput = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      setUploadStatus('No file selected.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await axios.post('http://localhost:8000/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setUploadStatus(response.data.info);
+    } catch (error) {
+      setUploadStatus('Upload failed.');
+      console.error(error);
+    }
+  };
+
+  return (
+    <div className="App">
+      <h1>File Upload Example</h1>
+      <input type="file" onChange={handleFileInput} />
+      <button onClick={handleUpload}>Upload</button>
+      <p>{uploadStatus}</p>
+    </div>
+  );
+}
+
+export default App;
+
+
+
+
+
+
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
+import os
+import shutil
+
+app = FastAPI()
+
+# CORS (Cross-Origin Resource Sharing) configuration
+origins = [
+    "http://localhost:3000",  # ReactJS frontend URL
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["POST"],
+    allow_headers=["*"],
+)
+
+# Directory where files will be saved
+UPLOAD_DIRECTORY = "/mnt/nfs/uploaded_files"
+
+# Ensure the directory exists
+if not os.path.exists(UPLOAD_DIRECTORY):
+    os.makedirs(UPLOAD_DIRECTORY)
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    # Security: Validate file name
+    filename = os.path.basename(file.filename)
+    if ".." in filename or filename.startswith("/"):
+        raise HTTPException(status_code=400, detail="Invalid file name.")
+
+    file_location = os.path.join(UPLOAD_DIRECTORY, filename)
+
+    with open(file_location, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {"info": f"File '{filename}' saved at '{file_location}'"}
