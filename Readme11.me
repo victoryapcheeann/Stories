@@ -1,0 +1,36 @@
+from fastapi import FastAPI, File, UploadFile
+from sqlalchemy import create_engine, Column, Integer, LargeBinary
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+app = FastAPI()
+
+# SQLAlchemy Setup
+DATABASE_URL = "postgresql://user:password@localhost/dbname"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+class FileBlob(Base):
+    __tablename__ = 'files'
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(LargeBinary, nullable=False)
+
+Base.metadata.create_all(bind=engine)
+
+# Endpoint to handle file upload
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    contents = await file.read()  # Read the file contents as bytes
+    
+    db = SessionLocal()
+    file_blob = FileBlob(content=contents)
+    db.add(file_blob)
+    db.commit()
+    db.refresh(file_blob)
+    
+    return {"file_id": file_blob.id}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
