@@ -1,3 +1,16 @@
+ // Function to move selected rows to the top
+  const onSelectionChanged = () => {
+    const selectedNodes = gridRef.current!.api.getSelectedNodes();
+    const selectedData = selectedNodes.map(node => node.data);
+    const unselectedData = rowData.filter(row => !selectedNodes.some(node => node.data.id === row.id));
+
+    // Move selected rows to the top
+    setRowData([...selectedData, ...unselectedData]);
+  };
+
+onSelectionChanged={onSelectionChanged}
+
+
 import React, { useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
