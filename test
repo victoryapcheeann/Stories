@@ -1,0 +1,2 @@
+  const [columnDefs] = useState([
+    { headerCheckboxSelection: true, checkboxSelection: true, width: 50, pinned: 'left' },
