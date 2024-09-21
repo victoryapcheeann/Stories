@@ -1,2 +1,30 @@
+import React, { useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+const App = () => {
+  const [rowData] = useState([
+    { id: 1, name: 'John Doe', age: 25 },
+    { id: 2, name: 'Jane Smith', age: 30 },
+    { id: 3, name: 'Sam Johnson', age: 40 }
+  ]);
+
   const [columnDefs] = useState([
     { headerCheckboxSelection: true, checkboxSelection: true, width: 50, pinned: 'left' },
+    { field: 'name', headerName: 'Name', sortable: true, filter: true },
+    { field: 'age', headerName: 'Age', sortable: true, filter: true }
+  ]);
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDefs}
+        rowSelection="multiple"
+      />
+    </div>
+  );
+};
+
+export default App;
