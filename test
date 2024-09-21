@@ -1,32 +1,24 @@
-  // Function to move selected rows to the top
   const onSelectionChanged = () => {
+    // Get the selected row nodes
     const selectedNodes = gridRef.current!.api.getSelectedNodes();
-    const selectedIds = selectedNodes.map(node => node.data.id);
+    const selectedIds = selectedNodes.map(node => node.data.id); // Store selected row IDs
 
+    // Separate the selected and unselected data
     const selectedData = selectedNodes.map(node => node.data);
     const unselectedData = rowData.filter(row => !selectedIds.includes(row.id));
 
-    // Move selected rows to the top
+    // Update the rowData to move selected rows to the top
     const newRowData = [...selectedData, ...unselectedData];
-
-    // Update row data and preserve the selection
     setRowData(newRowData);
 
-    // After updating the row data, wait for the grid to finish rendering and then re-select the rows
-    setTimeout(() => {
-      newRowData.forEach(row => {
-        if (selectedIds.includes(row.id)) {
-          const node = gridRef.current!.api.getRowNode(row.id.toString());
-          if (node) {
-            node.setSelected(true); // Re-select the rows
-          }
-        }
-      });
-    }, 0);
+    // After updating rowData, re-select the rows that were selected before
+    gridRef.current!.api.deselectAll();
+    newRowData.forEach((row) => {
+      if (selectedIds.includes(row.id)) {
+        gridRef.current!.api.getRowNode(newRowData.indexOf(row))?.setSelected(true);
+      }
+    });
   };
-
-        getRowNodeId={data => data.id.toString()} // Provide a unique row ID for selection
-        onSelectionChanged={onSelectionChanged}
 
 
 import React, { useState } from 'react';
