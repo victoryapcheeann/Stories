@@ -1,25 +1,26 @@
-  const onSelectionChanged = () => {
-    // Get the selected row nodes
-    const selectedNodes = gridRef.current!.api.getSelectedNodes();
-    const selectedIds = selectedNodes.map(node => node.data.id); // Store selected row IDs
+   // Function to shuffle selected rows to the top
+  const shuffleSelectedRowsToTop = () => {
+    if (gridRef.current) {
+      // Get the selected rows (IDs)
+      const selectedNodes = gridRef.current.api.getSelectedNodes();
+      const selectedIds = selectedNodes.map(node => node.data.id);
 
-    // Separate the selected and unselected data
-    const selectedData = selectedNodes.map(node => node.data);
-    const unselectedData = rowData.filter(row => !selectedIds.includes(row.id));
+      // Filter selected and unselected rows
+      const selectedData = selectedNodes.map(node => node.data);
+      const unselectedData = rowData.filter(row => !selectedIds.includes(row.id));
 
-    // Update the rowData to move selected rows to the top
-    const newRowData = [...selectedData, ...unselectedData];
-    setRowData(newRowData);
+      // Update rowData to move selected rows to the top
+      setRowData([...selectedData, ...unselectedData]);
 
-    // After updating rowData, re-select the rows that were selected before
-    gridRef.current!.api.deselectAll();
-
-    // Re-select the rows that were previously selected
-    gridRef.current!.api.forEachNode((node) => {
-      if (selectedIds.includes(node.data.id)) {
-        node.setSelected(true);
-      }
-    });
+      // Reapply the selection after reordering
+      setTimeout(() => {
+        gridRef.current?.api.forEachNode(node => {
+          if (selectedIds.includes(node.data.id)) {
+            node.setSelected(true);
+          }
+        });
+      }, 0);
+    }
   };
 
 import React, { useState } from 'react';
