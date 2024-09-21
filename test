@@ -13,13 +13,14 @@
 
     // After updating rowData, re-select the rows that were selected before
     gridRef.current!.api.deselectAll();
-    newRowData.forEach((row) => {
-      if (selectedIds.includes(row.id)) {
-        gridRef.current!.api.getRowNode(newRowData.indexOf(row))?.setSelected(true);
+
+    // Re-select the rows that were previously selected
+    gridRef.current!.api.forEachNode((node) => {
+      if (selectedIds.includes(node.data.id)) {
+        node.setSelected(true);
       }
     });
   };
-
 
 import React, { useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
