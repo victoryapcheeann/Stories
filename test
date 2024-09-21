@@ -3,14 +3,31 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
-const App = () => {
-  const [rowData] = useState([
+interface RowData {
+  id: number;
+  name: string;
+  age: number;
+}
+
+interface ColumnDef {
+  field?: string;
+  headerName?: string;
+  sortable?: boolean;
+  filter?: boolean;
+  checkboxSelection?: boolean;
+  headerCheckboxSelection?: boolean;
+  width?: number;
+  pinned?: string;
+}
+
+const App: React.FC = () => {
+  const [rowData] = useState<RowData[]>([
     { id: 1, name: 'John Doe', age: 25 },
     { id: 2, name: 'Jane Smith', age: 30 },
     { id: 3, name: 'Sam Johnson', age: 40 }
   ]);
 
-  const [columnDefs] = useState([
+  const [columnDefs] = useState<ColumnDef[]>([
     { headerCheckboxSelection: true, checkboxSelection: true, width: 50, pinned: 'left' },
     { field: 'name', headerName: 'Name', sortable: true, filter: true },
     { field: 'age', headerName: 'Age', sortable: true, filter: true }
