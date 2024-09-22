@@ -26,6 +26,14 @@
 
 
 3) Custom cell
+
+ if (params.value === 'Complete') {
+          return `<span class="status-complete">${params.value}</span>`;
+        } else {
+          return `<span class="status-incomplete">${params.value}</span>`;
+        }
+
+
 import { CustomCellRendererProps } from '@ag-grid-community/react';
 import React from 'react';
 
