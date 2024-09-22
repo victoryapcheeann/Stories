@@ -1,3 +1,30 @@
+  const sideBar = useMemo<
+    SideBarDef | string | string[] | boolean | null
+  >(() => {
+    return {
+      toolPanels: [
+        {
+          id: "columns",
+          labelDefault: "Columns",
+          labelKey: "columns",
+          iconKey: "columns",
+          toolPanel: "agColumnsToolPanel",
+        },
+        {
+          id: "filters",
+          labelDefault: "Filters",
+          labelKey: "filters",
+          iconKey: "filter",
+          toolPanel: "agFiltersToolPanel",
+        },
+      ],
+      defaultToolPanel: "filters",
+      hiddenByDefault: true,
+    };
+  }, []);
+
+
+
 import React, { useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
