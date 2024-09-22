@@ -9,6 +9,73 @@ const AgGridChangeDetection = () => {
     { id: 2, name: 'Jane', age: 25 },
     { id: 3, name: 'Peter', age: 35 },
   ]);
+
+  const [affectedRowIds, setAffectedRowIds] = useState([]);
+  const originalDataRef = useRef([...rowData]); // Store the original row data
+
+  const columnDefs = [
+    { field: 'id', headerName: 'ID' },
+    { field: 'name', headerName: 'Name', editable: true },
+    { field: 'age', headerName: 'Age', editable: true },
+  ];
+
+  const onCellValueChanged = (event) => {
+    const { data } = event;
+    const rowId = data.id;
+    const originalRow = originalDataRef.current.find(row => row.id === rowId);
+    
+    const isChanged = Object.keys(originalRow).some(
+      key => originalRow[key] !== data[key]
+    );
+
+    setAffectedRowIds(prevIds => {
+      if (isChanged) {
+        if (!prevIds.includes(rowId)) {
+          return [...prevIds, rowId]; // Add the row ID if it's changed
+        }
+      } else {
+        // If no change, remove the row ID from affectedRowIds
+        return prevIds.filter(id => id !== rowId);
+      }
+      return prevIds;
+    });
+  };
+
+  return (
+    <div>
+      <h3>Affected Rows: {affectedRowIds.join(', ')}</h3>
+      <div
+        className="ag-theme-alpine"
+        style={{ height: '400px', width: '600px' }}
+      >
+        <AgGridReact
+          rowData={rowData}
+          columnDefs={columnDefs}
+          onCellValueChanged={onCellValueChanged}
+          rowSelection="multiple"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default AgGridChangeDetection;
+
+
+
+
+
+import React, { useState, useRef } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+const AgGridChangeDetection = () => {
+  const [rowData, setRowData] = useState([
+    { id: 1, name: 'John', age: 30 },
+    { id: 2, name: 'Jane', age: 25 },
+    { id: 3, name: 'Peter', age: 35 },
+  ]);
   
   const [affectedRowIds, setAffectedRowIds] = useState([]);
   
