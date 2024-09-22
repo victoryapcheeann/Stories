@@ -1,3 +1,82 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+const App: React.FC = () => {
+  const [rowData] = useState([
+    { id: 1, name: 'John Doe', age: 25 },
+    { id: 2, name: 'Jane Smith', age: 30 },
+    { id: 3, name: 'Sam Johnson', age: 40 },
+    { id: 4, name: 'Chris Lee', age: 35 }
+  ]);
+
+  const [columnDefs] = useState([
+    { headerCheckboxSelection: true, checkboxSelection: true, width: 50, pinned: 'left' },
+    { field: 'name', headerName: 'Name', sortable: true, filter: true },
+    { field: 'age', headerName: 'Age', sortable: true, filter: true }
+  ]);
+
+  const gridRef = useRef<AgGridReact>(null);
+  const [showSelected, setShowSelected] = useState(false);
+  const [displayedRows, setDisplayedRows] = useState(rowData);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  // Save the selected row IDs
+  const getSelectedRowIds = () => {
+    const selectedNodes = gridRef.current!.api.getSelectedNodes();
+    const selectedData = selectedNodes.map(node => node.data.id);
+    setSelectedIds(selectedData);
+  };
+
+  // Toggle between showing all rows and only selected rows
+  const toggleShowSelected = () => {
+    setShowSelected(!showSelected);
+
+    // Before toggling, get selected row IDs
+    getSelectedRowIds();
+
+    if (!showSelected) {
+      const selectedNodes = gridRef.current!.api.getSelectedNodes();
+      const selectedData = selectedNodes.map(node => node.data);
+      setDisplayedRows(selectedData); // Show only selected rows
+    } else {
+      setDisplayedRows(rowData); // Show all rows
+    }
+  };
+
+  // Restore selected rows when data changes
+  useEffect(() => {
+    // After the grid has rendered the new data, re-select previously selected rows
+    if (gridRef.current) {
+      gridRef.current.api.forEachNode(node => {
+        if (selectedIds.includes(node.data.id)) {
+          node.setSelected(true);
+        }
+      });
+    }
+  }, [displayedRows, selectedIds]);
+
+  return (
+    <div>
+      <button onClick={toggleShowSelected}>
+        {showSelected ? 'Show All Rows' : 'Show Only Selected Rows'}
+      </button>
+      <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+        <AgGridReact
+          ref={gridRef}
+          rowData={displayedRows}
+          columnDefs={columnDefs}
+          rowSelection="multiple"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default App;
+
+
 1) validation
   cellClassRules: {
         'invalid-cell': (params: any) => !params.value || params.value.trim() === '' // Apply class if the cell is empty or contains only spaces
