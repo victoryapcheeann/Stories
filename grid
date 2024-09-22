@@ -1,0 +1,65 @@
+1) validation
+  cellClassRules: {
+        'invalid-cell': (params: any) => !params.value || params.value.trim() === '' // Apply class if the cell is empty or contains only spaces
+      }
+
+.invalid-cell {
+  background-color: #ffcccc; /* Light red background for invalid cells */
+}
+
+
+2) selected
+ <button onClick={toggleShowSelected}>
+        {showSelected ? 'Show All Rows' : 'Show Only Selected Rows'}
+      </button>
+
+  const toggleShowSelected = () => {
+    setShowSelected(!showSelected);
+    if (!showSelected) {
+      const selectedNodes = gridRef.current!.api.getSelectedNodes();
+      const selectedData = selectedNodes.map(node => node.data);
+      setDisplayedRows(selectedData); // Show only selected rows
+    } else {
+      setDisplayedRows(rowData); // Show all rows
+    }
+  };
+
+
+3) Custom cell
+const [columnDefs] = useState([
+    { field: 'task', headerName: 'Task', editable: true, sortable: true, filter: true },
+    { field: 'age', headerName: 'Age', editable: true, sortable: true, filter: true },
+    {
+      field: 'status',
+      headerName: 'Status',
+      cellRenderer: (params: any) => {
+        // Customize the content based on the value
+        if (params.value === 'Complete') {
+          return `<span class="status-complete">${params.value}</span>`;
+        } else {
+          return `<span class="status-incomplete">${params.value}</span>`;
+        }
+      }
+    }
+  ]);
+
+/* For 'Complete' status: Green text with a green border and background */
+.status-complete {
+  color: green;
+  background-color: #e6ffe6;
+  padding: 5px;
+  border: 2px solid green;
+  border-radius: 4px;
+}
+
+/* For 'Incomplete' status: Red text with a red border and background */
+.status-incomplete {
+  color: red;
+  background-color: #ffe6e6;
+  padding: 5px;
+  border: 2px solid red;
+  border-radius: 4px;
+}
+
+
+4) 
