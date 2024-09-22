@@ -3,11 +3,97 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
+const AgGridChangeDetection = () => {
+  // Example row data (this can be any dataset)
+  const [rowData, setRowData] = useState([
+    { id: 1, name: 'John', age: 30 },
+    { id: 2, name: 'Jane', age: 25 },
+    { id: 3, name: 'Peter', age: 35 },
+  ]);
+
+  // Store the affected row IDs
+  const [affectedRowIds, setAffectedRowIds] = useState([]);
+
+  // Use a ref to keep track of the original data
+  const originalDataRef = useRef([]);
+
+  // Store the original data once when the component mounts
+  useEffect(() => {
+    originalDataRef.current = JSON.parse(JSON.stringify(rowData)); // Deep copy
+  }, [rowData]);
+
+  // Column definitions for AG Grid (editable fields)
+  const columnDefs = [
+    { field: 'id', headerName: 'ID', editable: false },
+    { field: 'name', headerName: 'Name', editable: true },
+    { field: 'age', headerName: 'Age', editable: true },
+  ];
+
+  // Function to handle cell value changes and detect changes between original and modified data
+  const onCellValueChanged = (event) => {
+    const { data } = event; // The updated row data
+    const rowId = data.id;
+
+    // Find the original row by matching the ID
+    const originalRow = originalDataRef.current.find((row) => row.id === rowId);
+
+    // Check if the current data has changed from the original
+    const isChanged = Object.keys(originalRow).some(
+      (key) => originalRow[key] !== data[key]
+    );
+
+    setAffectedRowIds((prevIds) => {
+      if (isChanged) {
+        // Add row ID if changed and not already in the list
+        if (!prevIds.includes(rowId)) {
+          return [...prevIds, rowId];
+        }
+      } else {
+        // Remove row ID if changes were reverted back to the original state
+        return prevIds.filter((id) => id !== rowId);
+      }
+      return prevIds;
+    });
+  };
+
+  return (
+    <div>
+      <h3>Affected Rows: {affectedRowIds.join(', ')}</h3>
+      <div className="ag-theme-alpine" style={{ height: '400px', width: '600px' }}>
+        <AgGridReact
+          rowData={rowData}
+          columnDefs={columnDefs}
+          onCellValueChanged={onCellValueChanged}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default AgGridChangeDetection;
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useRef, useEffect } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
 interface RowData {
   id: number;
   name: string;
   age: number;
 }
+
 
 const AgGridChangeDetection: React.FC = () => {
   // Initial row data
