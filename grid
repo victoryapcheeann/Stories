@@ -1,3 +1,59 @@
+import React, { useState, useRef } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+const AgGridChangeDetection = () => {
+  const [rowData, setRowData] = useState([
+    { id: 1, name: 'John', age: 30 },
+    { id: 2, name: 'Jane', age: 25 },
+    { id: 3, name: 'Peter', age: 35 },
+  ]);
+  
+  const [affectedRowIds, setAffectedRowIds] = useState([]);
+  
+  const gridRef = useRef();
+
+  const columnDefs = [
+    { field: 'id', headerName: 'ID' },
+    { field: 'name', headerName: 'Name', editable: true },
+    { field: 'age', headerName: 'Age', editable: true },
+  ];
+
+  const onCellValueChanged = (event) => {
+    const rowId = event.data.id;
+    setAffectedRowIds(prevIds => {
+      if (!prevIds.includes(rowId)) {
+        return [...prevIds, rowId];
+      }
+      return prevIds;
+    });
+  };
+
+  return (
+    <div>
+      <h3>Affected Rows: {affectedRowIds.join(', ')}</h3>
+      <div
+        className="ag-theme-alpine"
+        style={{ height: '400px', width: '600px' }}
+      >
+        <AgGridReact
+          ref={gridRef}
+          rowData={rowData}
+          columnDefs={columnDefs}
+          onCellValueChanged={onCellValueChanged}
+          rowSelection="multiple"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default AgGridChangeDetection;
+
+
+
+
 import React, { useState, useRef, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
