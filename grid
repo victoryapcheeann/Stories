@@ -62,4 +62,23 @@ const [columnDefs] = useState([
 }
 
 
-4) 
+4) pivot
+  const defaultColDef = useMemo<ColDef>(() => {
+    return {
+      flex: 1,
+      minWidth: 130,
+      enableValue: true,
+      enableRowGroup: true,
+      enablePivot: true,
+    };
+  }, []);
+  const autoGroupColumnDef = useMemo<ColDef>(() => {
+    return {
+      minWidth: 200,
+      pinned: "left",
+    };
+  }, []);
+
+
+          defaultColDef={defaultColDef}
+          autoGroupColumnDef={autoGroupColumnDef
