@@ -18,14 +18,15 @@ const App: React.FC = () => {
   ]);
 
   const gridRef = useRef<AgGridReact>(null);
+  const [gridApi, setGridApi] = useState<any>(null);
   const [showSelected, setShowSelected] = useState(false);
   const [displayedRows, setDisplayedRows] = useState(rowData);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // Save the selected row IDs
   const getSelectedRowIds = () => {
-    const selectedNodes = gridRef.current!.api.getSelectedNodes();
-    const selectedData = selectedNodes.map(node => node.data.id);
+    const selectedNodes = gridApi.getSelectedNodes();
+    const selectedData = selectedNodes.map((node: any) => node.data.id);
     setSelectedIds(selectedData);
   };
 
@@ -37,8 +38,8 @@ const App: React.FC = () => {
     getSelectedRowIds();
 
     if (!showSelected) {
-      const selectedNodes = gridRef.current!.api.getSelectedNodes();
-      const selectedData = selectedNodes.map(node => node.data);
+      const selectedNodes = gridApi.getSelectedNodes();
+      const selectedData = selectedNodes.map((node: any) => node.data);
       setDisplayedRows(selectedData); // Show only selected rows
     } else {
       setDisplayedRows(rowData); // Show all rows
@@ -47,15 +48,19 @@ const App: React.FC = () => {
 
   // Restore selected rows when data changes
   useEffect(() => {
-    // After the grid has rendered the new data, re-select previously selected rows
-    if (gridRef.current) {
-      gridRef.current.api.forEachNode(node => {
+    if (gridApi) {
+      gridApi.forEachNode((node: any) => {
         if (selectedIds.includes(node.data.id)) {
           node.setSelected(true);
         }
       });
     }
-  }, [displayedRows, selectedIds]);
+  }, [displayedRows, selectedIds, gridApi]);
+
+  // Capture the grid API when the grid is ready
+  const onGridReady = (params: any) => {
+    setGridApi(params.api);
+  };
 
   return (
     <div>
@@ -68,6 +73,7 @@ const App: React.FC = () => {
           rowData={displayedRows}
           columnDefs={columnDefs}
           rowSelection="multiple"
+          onGridReady={onGridReady} // Set the grid API when ready
         />
       </div>
     </div>
@@ -75,6 +81,7 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
 
 1) validation
