@@ -26,41 +26,22 @@
 
 
 3) Custom cell
-const [columnDefs] = useState([
-    { field: 'task', headerName: 'Task', editable: true, sortable: true, filter: true },
-    { field: 'age', headerName: 'Age', editable: true, sortable: true, filter: true },
-    {
-      field: 'status',
-      headerName: 'Status',
-      cellRenderer: (params: any) => {
-        // Customize the content based on the value
-        if (params.value === 'Complete') {
-          return `<span class="status-complete">${params.value}</span>`;
-        } else {
-          return `<span class="status-incomplete">${params.value}</span>`;
+import { CustomCellRendererProps } from '@ag-grid-community/react';
+import React from 'react';
+
+export default (params: CustomCellRendererProps) => (
+    <span className="missionSpan">
+        {
+            <img
+                alt={`${params.value}`}
+                src={`https://www.ag-grid.com/example-assets/icons/${
+                    params.value ? 'tick-in-circle' : 'cross-in-circle'
+                }.png`}
+                className="missionIcon"
+            />
         }
-      }
-    }
-  ]);
-
-/* For 'Complete' status: Green text with a green border and background */
-.status-complete {
-  color: green;
-  background-color: #e6ffe6;
-  padding: 5px;
-  border: 2px solid green;
-  border-radius: 4px;
-}
-
-/* For 'Incomplete' status: Red text with a red border and background */
-.status-incomplete {
-  color: red;
-  background-color: #ffe6e6;
-  padding: 5px;
-  border: 2px solid red;
-  border-radius: 4px;
-}
-
+    </span>
+);
 
 4) pivot
   const defaultColDef = useMemo<ColDef>(() => {
