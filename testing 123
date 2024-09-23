@@ -1,0 +1,53 @@
+// Import constants
+import { ACTUAL_CONSTANT, DEMO_CONSTANT } from './constants';
+
+// Set mode (could be passed as a prop or determined elsewhere)
+const mode = "actual"; // or "demo"
+
+// Define the initial state based on the mode
+const getInitialState = (mode) => {
+  if (mode === 'actual') {
+    return {
+      data: ACTUAL_CONSTANT,
+      isDemo: false,
+      userRole: "real_user",
+      // other actual mode states
+    };
+  } else if (mode === 'demo') {
+    return {
+      data: DEMO_CONSTANT,
+      isDemo: true,
+      userRole: "demo_user",
+      // other demo mode states
+    };
+  } else {
+    return {
+      data: null,
+      isDemo: false,
+      userRole: "unknown",
+    };
+  }
+};
+
+// Initialize the state
+const initialState = getInitialState(mode);
+
+// Usage example
+const [state, setState] = useState(initialState);
+
+
+1) add data
+  // Add new row of data
+  // Add multiple rows of data
+  const addRows = () => {
+    const newRows = [
+      { firstName: 'Alice', lastName: 'Johnson', age: 28 },
+      { firstName: 'Bob', lastName: 'Williams', age: 32 },
+      { firstName: 'Charlie', lastName: 'Brown', age: 22 }
+    ];
+    setRowData([...rowData, ...newRows]); // Add multiple new rows to the existing data
+  };
+
+2) Chart
+https://www.ag-grid.com/react-data-grid/integrated-charts-range-chart/
+
