@@ -1,0 +1,100 @@
+// VisibilityContext.js
+import { createContext, useContext, useState } from 'react';
+
+const VisibilityContext = createContext();
+
+export const VisibilityProvider = ({ children }) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const [marginTop, setMarginTop] = useState(0); // New state for margin-top
+
+  const toggleVisibility = () => setIsVisible(!isVisible);
+  const adjustMarginTop = (newMargin) => setMarginTop(newMargin); // Function to adjust margin
+
+  return (
+    <VisibilityContext.Provider value={{ isVisible, toggleVisibility, marginTop, adjustMarginTop }}>
+      {children}
+    </VisibilityContext.Provider>
+  );
+};
+
+export const useVisibility = () => useContext(VisibilityContext);
+
+
+// App.js
+import React from 'react';
+import { VisibilityProvider } from './VisibilityContext';
+import ParentComponent from './ParentComponent';
+
+const App = () => {
+  return (
+    <VisibilityProvider>
+      <ParentComponent />
+    </VisibilityProvider>
+  );
+};
+
+export default App;
+
+
+
+
+// ParentComponent.js
+import React from 'react';
+import { useVisibility } from './VisibilityContext';
+import ChildComponent from './ChildComponent';
+
+const ParentComponent = () => {
+  const { isVisible, marginTop } = useVisibility();
+
+  return (
+    <div>
+      <h1>Parent Component</h1>
+      {isVisible && (
+        <div style={{ marginTop: `${marginTop}px` }}>This component is visible with margin-top: {marginTop}px</div>
+      )}
+      {isVisible && (
+        <div style={{ marginTop: `${marginTop}px` }}>Another component to hide, margin-top: {marginTop}px</div>
+      )}
+      <ChildComponent />
+    </div>
+  );
+};
+
+export default ParentComponent;
+
+
+// ChildComponent.js
+import React, { useState } from 'react';
+import { useVisibility } from './VisibilityContext';
+
+const ChildComponent = () => {
+  const { toggleVisibility, adjustMarginTop } = useVisibility();
+  const [marginValue, setMarginValue] = useState(0);
+
+  const handleMarginChange = (e) => {
+    setMarginValue(e.target.value);
+    adjustMarginTop(e.target.value); // Update margin value in the context
+  };
+
+  return (
+    <div>
+      <button onClick={toggleVisibility}>
+        Toggle Visibility of Parent Components
+      </button>
+
+      <div>
+        <label>
+          Adjust Margin-Top:
+          <input
+            type="number"
+            value={marginValue}
+            onChange={handleMarginChange}
+            placeholder="Enter margin-top value"
+          />
+        </label>
+      </div>
+    </div>
+  );
+};
+
+export default ChildComponent;
