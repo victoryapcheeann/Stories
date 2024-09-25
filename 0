@@ -1,3 +1,47 @@
+// Define a function to check if a specific cell has changed
+function isCellChanged(params) {
+  const originalRow = originalData.find(item => item.id === params.data.id);
+  return originalRow && params.value !== originalRow[params.colDef.field];
+}
+
+// Column Definitions
+const columnDefs = [
+  {
+    headerName: 'Column A',
+    field: 'columnA',
+    cellClassRules: {
+      'cell-changed': params => isCellChanged(params) // Apply class if cell has changed
+    }
+  },
+  {
+    headerName: 'Column B',
+    field: 'columnB',
+    cellClassRules: {
+      'cell-changed': params => isCellChanged(params) // Apply class if cell has changed
+    }
+  }
+];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 https://docs.google.com/document/d/19CMPDZrUIdR6N-g-KPZWp1alCSo5vJK1CL4s7Sm0XNY/edit?usp=sharing
 
 
