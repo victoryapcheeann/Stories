@@ -1,0 +1,85 @@
+import React from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import { GridApi } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+const GridComponent: React.FC = () => {
+  const [gridApi, setGridApi] = React.useState<GridApi | null>(null);
+
+  // Column definitions, including 'id'
+  const columnDefs = [
+    { headerName: 'ID', field: 'id', filter: 'agSetColumnFilter' },
+    { headerName: 'Name', field: 'name' },
+    { headerName: 'Age', field: 'age' },
+  ];
+
+  // Sample row data
+  const rowData = [
+    { id: 1, name: 'John Doe', age: 30 },
+    { id: 2, name: 'Jane Smith', age: 25 },
+    { id: 3, name: 'Jack Johnson', age: 40 },
+  ];
+
+  // Function to handle grid ready event
+  const onGridReady = (params: any) => {
+    setGridApi(params.api);
+  };
+
+  // Function to filter selected rows by ID
+  const filterSelectedRows = () => {
+    if (!gridApi) return;
+
+    // Get the selected rows
+    const selectedRows = gridApi.getSelectedRows();
+
+    // Extract the IDs from the selected rows
+    const selectedIds = selectedRows.map((row) => row.id);
+
+    // Get the filter instance for the 'id' column
+    const filterInstance = gridApi.getFilterInstance('id') as any;
+
+    // Apply the Set Filter for the 'id' column to only show selected IDs
+    filterInstance.setModel({
+      type: 'set',
+      values: selectedIds, // Only show rows with these selected IDs
+    });
+
+    // Inform the grid that the filter model has changed
+    gridApi.onFilterChanged();
+  };
+
+  // Function to reset the filter and show all rows again
+  const resetFilter = () => {
+    if (!gridApi) return;
+
+    // Get the filter instance for the 'id' column
+    const filterInstance = gridApi.getFilterInstance('id') as any;
+
+    // Clear the filter by setting the model to null
+    filterInstance.setModel(null);
+
+    // Inform the grid that the filter model has changed
+    gridApi.onFilterChanged();
+  };
+
+  return (
+    <div>
+      <div className="button-group">
+        <button onClick={filterSelectedRows}>Filter Selected Rows</button>
+        <button onClick={resetFilter}>Show All Rows</button>
+      </div>
+
+      <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+        <AgGridReact
+          columnDefs={columnDefs}
+          rowData={rowData}
+          rowSelection="multiple"
+          onGridReady={onGridReady}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default GridComponent;
