@@ -1,3 +1,14 @@
+getCellStyle: (params: any) => {
+        // Apply background color if the cell is marked as updated
+        if (params.data && params.data.updated) {
+          return { backgroundColor: 'yellow' };
+        }
+        return null;
+      },
+
+
+      
+
 cellClassRules: {
         'updated-cell': (params: CellClassParams) => !!params.data?.updated,
       }, // Apply updated-cell class if the cell was edited
