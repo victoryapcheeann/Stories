@@ -1,3 +1,17 @@
+ // Function to handle cell value changes
+  const onCellValueChanged = (params: any) => {
+    const rowNode = params.node;
+    // Set a custom "updated" flag when the cell is updated
+    rowNode.setDataValue('updated', true);
+
+    // Optionally refresh cells to force re-rendering and apply the new styles
+    params.api.refreshCells({ force: true });
+  };
+
+
+
+
+
 import React from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { GridApi, FilterModel } from 'ag-grid-community';
