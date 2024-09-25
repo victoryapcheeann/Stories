@@ -1,6 +1,6 @@
 import React from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { GridApi } from 'ag-grid-community';
+import { GridApi, FilterModel } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
@@ -9,7 +9,7 @@ const GridComponent: React.FC = () => {
 
   // Column definitions, including 'id'
   const columnDefs = [
-    { headerName: 'ID', field: 'id' },
+    { headerName: 'ID', field: 'id', filter: 'agSetColumnFilter' },
     { headerName: 'Name', field: 'name' },
     { headerName: 'Age', field: 'age' },
   ];
@@ -26,26 +26,34 @@ const GridComponent: React.FC = () => {
     setGridApi(params.api);
   };
 
-  // Function to filter selected rows by ID using quick filter
+  // Function to filter selected rows by ID using filter model
   const filterSelectedRows = () => {
     if (!gridApi) return;
 
     // Get the selected rows
     const selectedRows = gridApi.getSelectedRows();
 
-    // Extract the IDs from the selected rows and join them into a string
-    const selectedIds = selectedRows.map((row) => row.id.toString()).join(' ');
+    // Extract the IDs from the selected rows
+    const selectedIds = selectedRows.map((row) => row.id);
 
-    // Apply the quick filter to show only rows with the selected IDs
-    gridApi.setQuickFilter(selectedIds);
+    // Create a filter model to show only rows with the selected IDs
+    const filterModel: FilterModel = {
+      id: {
+        filterType: 'set',
+        values: selectedIds.map(String), // Ensure the IDs are strings for the filter
+      },
+    };
+
+    // Apply the filter model to the grid
+    gridApi.setFilterModel(filterModel);
   };
 
   // Function to reset the filter and show all rows again
   const resetFilter = () => {
     if (!gridApi) return;
 
-    // Clear the quick filter by passing an empty string
-    gridApi.setQuickFilter('');
+    // Reset the filter model to null to show all rows
+    gridApi.setFilterModel(null);
   };
 
   return (
