@@ -1,3 +1,7 @@
+cellClassRules: {
+        'updated-cell': (params: CellClassParams) => !!params.data?.updated,
+      }, // Apply updated-cell class if the cell was edited
+ 
  // Function to handle cell value changes
   const onCellValueChanged = (params: any) => {
     const rowNode = params.node;
