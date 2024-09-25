@@ -1,1 +1,133 @@
 https://docs.google.com/document/d/19CMPDZrUIdR6N-g-KPZWp1alCSo5vJK1CL4s7Sm0XNY/edit?usp=sharing
+
+
+Yes, you can use a `Set` to detect if there are duplicate `id` values and deny the upload if a row with the same `id` already exists in the grid.
+
+Here’s how you can modify the code to achieve that:
+
+### Steps:
+1. **Track the existing `ids`** in a `Set`.
+2. **Check for duplicates** before appending the new data.
+3. **Deny the upload** if a duplicate `id` is found and display an appropriate message.
+
+### Updated Code with Duplicate ID Detection
+
+```jsx
+import React, { useState } from 'react';
+import * as XLSX from 'xlsx';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+const ExcelToAgGrid = () => {
+  const [rowData, setRowData] = useState([]);
+  const [columnDefs, setColumnDefs] = useState([]);
+  const [existingIds, setExistingIds] = useState(new Set()); // Track existing ids
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+
+      // Assuming the first sheet is the one you want to load
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      // Convert the sheet into JSON format
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+      // Prepare column definitions based on the first row of the Excel sheet
+      const columns = jsonData[0].map((header) => ({
+        headerName: header,
+        field: header,
+      }));
+
+      // If no columns are defined yet, set them
+      if (columnDefs.length === 0) {
+        setColumnDefs(columns);
+      }
+
+      // Prepare row data excluding the first row (header row)
+      const newRows = jsonData.slice(1).map((row) => {
+        const rowObj = {};
+        jsonData[0].forEach((header, index) => {
+          rowObj[header] = row[index];
+        });
+        return rowObj;
+      });
+
+      // Check for duplicate ids (assuming 'id' is the unique identifier)
+      let duplicateFound = false;
+      const newIds = new Set();
+      newRows.forEach((row) => {
+        const id = row['id']; // Assuming 'id' is the column name for unique IDs
+        if (existingIds.has(id) || newIds.has(id)) {
+          duplicateFound = true;
+        }
+        newIds.add(id);
+      });
+
+      if (duplicateFound) {
+        alert('Duplicate ID found. Upload denied.');
+        return;
+      }
+
+      // Merge the new rows with the existing data
+      setRowData((prevRows) => [...prevRows, ...newRows]);
+
+      // Update the existingIds set with new ids
+      setExistingIds((prevIds) => {
+        const updatedIds = new Set(prevIds);
+        newRows.forEach((row) => {
+          updatedIds.add(row['id']);
+        });
+        return updatedIds;
+      });
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  return (
+    <div>
+      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+      
+      <div className="ag-theme-alpine" style={{ height: 400, width: '100%' }}>
+        <AgGridReact
+          rowData={rowData}
+          columnDefs={columnDefs}
+          defaultColDef={{
+            sortable: true,
+            filter: true,
+            resizable: true,
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default ExcelToAgGrid;
+```
+
+### Key Changes:
+1. **`existingIds` State**:
+   - A `Set` is used to store the existing `ids` from previously uploaded data.
+   - When new data is uploaded, the `Set` is checked to ensure no duplicate `ids` are added.
+
+2. **Checking for Duplicate IDs**:
+   - In the `handleFileUpload` function, the `id` field from each new row is checked against the existing `ids` (from `existingIds`) and the current file's `newIds`.
+   - If a duplicate is found, the upload is denied with an alert (`alert('Duplicate ID found. Upload denied.')`).
+
+3. **Denying the Upload**:
+   - If a duplicate `id` is detected, the process is stopped, and the file is not uploaded.
+
+4. **Updating `existingIds`**:
+   - After verifying there are no duplicates, the `Set` is updated to include the newly added `ids` from the current upload.
+
+### Assumption:
+- **Unique Identifier**: The `id` field in the Excel file is assumed to be the unique identifier. You can replace `'id'` with whatever column represents the unique identifier in your dataset.
+
+This approach ensures that no duplicate rows with the same `id` are added to AG Grid. If a duplicate `id` is found, the upload is denied, preventing data inconsistency.
