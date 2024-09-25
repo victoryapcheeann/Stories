@@ -1,3 +1,95 @@
+// Assuming you have the original data stored somewhere for comparison
+const originalData = {
+  rowId1: { columnA: 'Original Value A', columnB: 'Original Value B' },
+  rowId2: { columnA: 'Original Value C', columnB: 'Original Value D' }
+};
+
+// Column definitions
+const columnDefs = [
+  {
+    headerName: 'Column A',
+    field: 'columnA',
+    cellStyle: params => {
+      // Compare current value with original value
+      const originalValue = originalData[params.data.id]?.columnA;
+      if (params.value !== originalValue) {
+        // Change cell color if values are different
+        return { backgroundColor: 'lightcoral' };
+      }
+      return null; // Default style
+    }
+  },
+  {
+    headerName: 'Column B',
+    field: 'columnB',
+    cellStyle: params => {
+      // Compare current value with original value
+      const originalValue = originalData[params.data.id]?.columnB;
+      if (params.value !== originalValue) {
+        // Change cell color if values are different
+        return { backgroundColor: 'lightcoral' };
+      }
+      return null; // Default style
+    }
+  }
+];
+
+// Grid options
+const gridOptions = {
+  columnDefs: columnDefs,
+  rowData: [
+    { id: 'rowId1', columnA: 'Current Value A', columnB: 'Current Value B' },
+    { id: 'rowId2', columnA: 'Original Value C', columnB: 'Modified Value D' }
+  ]
+};
+
+// Initialize the grid
+new agGrid.Grid(document.getElementById('myGrid'), gridOptions);
+
+
+const columnDefs = [
+  {
+    headerName: 'Column A',
+    field: 'columnA',
+    cellClassRules: {
+      'cell-changed': params => {
+        // Compare current value with original value
+        const originalValue = originalData[params.data.id]?.columnA;
+        return params.value !== originalValue;
+      }
+    }
+  },
+  {
+    headerName: 'Column B',
+    field: 'columnB',
+    cellClassRules: {
+      'cell-changed': params => {
+        const originalValue = originalData[params.data.id]?.columnB;
+        return params.value !== originalValue;
+      }
+    }
+  }
+];
+
+// Add the CSS rule
+const css = `
+.cell-changed {
+  background-color: lightcoral;
+}
+`;
+
+// Append to document
+const style = document.createElement('style');
+style.appendChild(document.createTextNode(css));
+document.head.appendChild(style);
+
+// Initialize the grid
+new agGrid.Grid(document.getElementById('myGrid'), gridOptions);
+
+
+
+
+
 // VisibilityContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
