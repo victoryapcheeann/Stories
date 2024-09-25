@@ -26,9 +26,20 @@ const GridComponent: React.FC = () => {
     setGridApi(params.api);
   };
 
+  // Function to force the initialization of all filters
+  const ensureFiltersInitialized = () => {
+    if (!gridApi) return;
+
+    // Force filter initialization
+    gridApi.refreshCells({ force: true });
+  };
+
   // Function to filter selected rows by ID
   const filterSelectedRows = () => {
     if (!gridApi) return;
+
+    // Make sure filters are initialized before trying to access them
+    ensureFiltersInitialized();
 
     // Get the selected rows
     const selectedRows = gridApi.getSelectedRows();
@@ -37,16 +48,21 @@ const GridComponent: React.FC = () => {
     const selectedIds = selectedRows.map((row) => row.id);
 
     // Get the filter instance for the 'id' column
-    const filterInstance = gridApi.getFilterInstance('id') as any;
+    const filterInstance = gridApi.getFilterInstance('id');
 
-    // Apply the Set Filter for the 'id' column to only show selected IDs
-    filterInstance.setModel({
-      type: 'set',
-      values: selectedIds, // Only show rows with these selected IDs
-    });
+    // Check if the filter instance is available
+    if (filterInstance) {
+      // Apply the Set Filter for the 'id' column to only show selected IDs
+      filterInstance.setModel({
+        type: 'set',
+        values: selectedIds, // Only show rows with these selected IDs
+      });
 
-    // Inform the grid that the filter model has changed
-    gridApi.onFilterChanged();
+      // Inform the grid that the filter model has changed
+      gridApi.onFilterChanged();
+    } else {
+      console.error("Filter instance for 'id' column is not available");
+    }
   };
 
   // Function to reset the filter and show all rows again
@@ -54,13 +70,18 @@ const GridComponent: React.FC = () => {
     if (!gridApi) return;
 
     // Get the filter instance for the 'id' column
-    const filterInstance = gridApi.getFilterInstance('id') as any;
+    const filterInstance = gridApi.getFilterInstance('id');
 
-    // Clear the filter by setting the model to null
-    filterInstance.setModel(null);
+    // Check if the filter instance is available
+    if (filterInstance) {
+      // Clear the filter by setting the model to null
+      filterInstance.setModel(null);
 
-    // Inform the grid that the filter model has changed
-    gridApi.onFilterChanged();
+      // Inform the grid that the filter model has changed
+      gridApi.onFilterChanged();
+    } else {
+      console.error("Filter instance for 'id' column is not available");
+    }
   };
 
   return (
