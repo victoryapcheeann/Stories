@@ -1,3 +1,97 @@
+To handle the Excel file upload and replace the existing data in the grid each time a new file is uploaded, we can clear the existing data before loading the new data. This will ensure that the new file's data completely replaces the old data in the grid.
+
+Here's how you can modify the `handleFileUpload` function to achieve this:
+
+### Code Example:
+
+```tsx
+import React, { useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import * as XLSX from 'xlsx';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+// Define the type for your row data
+interface RowData {
+  id: number;
+  name: string;
+  age: number;
+}
+
+const App: React.FC = () => {
+  const [rowData, setRowData] = useState<RowData[]>([]);  // Start with an empty grid
+
+  const [columnDefs] = useState([
+    { headerName: 'ID', field: 'id' },
+    { headerName: 'Name', field: 'name' },
+    { headerName: 'Age', field: 'age' }
+  ]);
+
+  // Handle the Excel file upload and replace existing data
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const binaryStr = e.target?.result;
+        const workbook = XLSX.read(binaryStr, { type: 'binary' });
+
+        // Read the first sheet from the workbook
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        // Convert sheet data to JSON
+        const newData: RowData[] = XLSX.utils.sheet_to_json(sheet);
+
+        // Clear the existing grid data and replace it with the new data
+        setRowData(newData);
+      };
+      reader.readAsBinaryString(file);
+    }
+  };
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDefs}
+        defaultColDef={{ sortable: true, filter: true }}
+      />
+    </div>
+  );
+};
+
+export default App;
+```
+
+### Explanation:
+
+1. **Clear Existing Data**:
+   - The state `rowData` is initialized as an empty array (`useState<RowData[]>([])`).
+   - When a new file is uploaded, the `setRowData(newData)` replaces the existing data with the newly uploaded data, effectively clearing the old data.
+
+2. **Rerun the Function**:
+   - Each time a new file is uploaded, the `handleFileUpload` function is called, reading and parsing the new file, and replacing the old data in the grid with the new data.
+
+3. **Handling File Input**:
+   - The `onChange` event is attached to the file input, so every time a file is selected, the `handleFileUpload` function runs.
+   - This ensures that each time a new Excel file is uploaded, it replaces the previous data in the grid.
+
+### Behavior:
+- Each time a new Excel file is uploaded, the old data in the grid is cleared and replaced with the new data.
+- The grid will refresh with the contents of the newly uploaded file.
+
+### Additional Considerations:
+- You can add more features like resetting the file input after uploading if needed, or adding more robust error handling for invalid files.
+
+
+
+
+
+
+
+
 To show a list of duplicated IDs in the alert when rows are rejected, you can first collect the IDs that are duplicated while filtering the data. Here's how you can implement it:
 
 ### Updated Code to Display Duplicated IDs:
