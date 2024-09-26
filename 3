@@ -1,3 +1,132 @@
+Yes, moving `editedCells` and `setEditedCells` to a context is a good idea, especially if you're defining `columnDefs` in a different file. This approach will centralize the management of the edited cells, making your state management cleaner and avoiding prop drilling.
+
+Here’s how you can implement it:
+
+### Step 1: Create a Context for `editedCells`
+
+Create a new context that will provide access to `editedCells` and `setEditedCells` throughout your application.
+
+```javascript
+import React, { createContext, useContext, useState } from 'react';
+
+// Create a context
+const EditedCellsContext = createContext();
+
+// Custom hook to use the EditedCellsContext
+export const useEditedCells = () => useContext(EditedCellsContext);
+
+// Provider component
+export const EditedCellsProvider = ({ children }) => {
+  const [editedCells, setEditedCells] = useState([]);
+
+  return (
+    <EditedCellsContext.Provider value={{ editedCells, setEditedCells }}>
+      {children}
+    </EditedCellsContext.Provider>
+  );
+};
+```
+
+### Step 2: Wrap Your App with the Provider
+
+In your main component (or wherever appropriate), wrap your application or specific parts of it in the `EditedCellsProvider`.
+
+```javascript
+import { EditedCellsProvider } from './EditedCellsContext'; // Adjust the path as needed
+import YourAgGridComponent from './YourAgGridComponent'; // Adjust the path as needed
+
+const App = () => {
+  return (
+    <EditedCellsProvider>
+      <YourAgGridComponent />
+    </EditedCellsProvider>
+  );
+};
+
+export default App;
+```
+
+### Step 3: Access `editedCells` and `setEditedCells` in Any Component
+
+Now, in your component where `columnDefs` is defined, you can use the `useEditedCells` hook to access `editedCells` and `setEditedCells`:
+
+```javascript
+import { useEditedCells } from './EditedCellsContext'; // Adjust the path as needed
+
+const columnDefs = () => {
+  const { editedCells } = useEditedCells();
+
+  const getCellStyle = (params) => {
+    const cellIsEdited = editedCells.some(cell =>
+      cell.rowId === params.data.id && cell.field === params.colDef.field
+    );
+
+    if (cellIsEdited) {
+      return { backgroundColor: '#FFFFC5' }; // Style for edited cells
+    }
+
+    return null;  // Default styling
+  };
+
+  return [
+    { headerName: 'Column 1', field: 'column1', getCellStyle },
+    { headerName: 'Column 2', field: 'column2', getCellStyle },
+    // other columns...
+  ];
+};
+
+export default columnDefs;
+```
+
+### Step 4: Update `onCellValueChanged` in the Component Using the Grid
+
+In the component where AG Grid is used, access `setEditedCells` from the context and use it to update the edited cells:
+
+```javascript
+import { useEditedCells } from './EditedCellsContext'; // Adjust the path as needed
+
+const YourAgGridComponent = () => {
+  const { setEditedCells } = useEditedCells();
+
+  const onCellValueChanged = (event) => {
+    const { data, colDef } = event;
+    const rowId = data.id;
+    const field = colDef.field;
+
+    const isChanged = true;  // Your logic for detecting change
+
+    if (isChanged) {
+      setEditedCells((prev) => [...prev, { rowId, field }]);
+    }
+
+    event.api.refreshCells({
+      force: true,
+      rowNodes: [event.node],
+    });
+  };
+
+  return (
+    <AgGridReact
+      columnDefs={columnDefs()}
+      onCellValueChanged={onCellValueChanged}
+      // other AG Grid properties...
+    />
+  );
+};
+
+export default YourAgGridComponent;
+```
+
+### Why This Is a Good Idea
+- **Centralized state management**: By using React’s Context API, you manage the state for `editedCells` in one place, making it accessible to any component without prop drilling.
+- **Better separation of concerns**: You can keep your `columnDefs` logic separate from the component where AG Grid is implemented, but still access the `editedCells` state where it's needed.
+- **Scalable solution**: This approach makes your code more modular and scalable, which is especially helpful if the application grows and multiple components need to interact with the grid state.
+
+By following this approach, your `editedCells` and `setEditedCells` will be managed globally and accessible wherever you need them.
+
+
+
+
 The issue you're encountering with AG Grid, where the background color of the edited cells spills over to the entire column after filtering and unfiltering, is likely due to how the `cellStyle` or `cellClass` is being applied. When you apply styles directly to cells, AG Grid will attempt to re-render the grid after certain actions (like filtering), and if the state tracking edited cells isn't properly maintained, it can apply styles indiscriminately to entire columns instead of individual cells.
 
 To solve this problem, you need to make sure that you're applying the background color only to specific cells, even after filtering. Here's how to address this:
