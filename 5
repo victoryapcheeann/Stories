@@ -1,0 +1,102 @@
+To show a list of duplicated IDs in the alert when rows are rejected, you can first collect the IDs that are duplicated while filtering the data. Here's how you can implement it:
+
+### Updated Code to Display Duplicated IDs:
+
+```tsx
+import React, { useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import * as XLSX from 'xlsx';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+// Define the type for your row data
+interface RowData {
+  id: number;
+  name: string;
+  age: number;
+}
+
+const App: React.FC = () => {
+  const [rowData, setRowData] = useState<RowData[]>([
+    { id: 1, name: 'John Doe', age: 25 },
+    { id: 2, name: 'Jane Smith', age: 30 }
+  ]);
+
+  const [columnDefs] = useState([
+    { headerName: 'ID', field: 'id' },
+    { headerName: 'Name', field: 'name' },
+    { headerName: 'Age', field: 'age' }
+  ]);
+
+  // Handle the Excel file upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const binaryStr = e.target?.result;
+        const workbook = XLSX.read(binaryStr, { type: 'binary' });
+
+        // Read the first sheet from the workbook
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        // Convert sheet data to JSON
+        const newData: RowData[] = XLSX.utils.sheet_to_json(sheet);
+
+        // Find duplicates
+        const duplicatedIds: number[] = [];
+        const filteredData = newData.filter((newRow) => {
+          const isDuplicate = rowData.some((existingRow) => existingRow.id === newRow.id);
+          if (isDuplicate) {
+            duplicatedIds.push(newRow.id);
+          }
+          return !isDuplicate;
+        });
+
+        if (duplicatedIds.length > 0) {
+          alert(`The following IDs were rejected due to duplication: ${duplicatedIds.join(', ')}`);
+        }
+
+        // Merge the filtered data with existing data
+        setRowData((prevData) => [...prevData, ...filteredData]);
+      };
+      reader.readAsBinaryString(file);
+    }
+  };
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDefs}
+        defaultColDef={{ sortable: true, filter: true }}
+      />
+    </div>
+  );
+};
+
+export default App;
+```
+
+### Key Changes:
+
+1. **Collect Duplicated IDs**:
+   - As we filter through the new data, we check for rows with duplicated `id`s using the `rowData.some()` method.
+   - If a row has a duplicate `id`, the `id` is pushed to the `duplicatedIds` array for later reporting.
+
+2. **Show Duplicated IDs in Alert**:
+   - After filtering, if there are any duplicate `id`s, an alert message shows the list of duplicated IDs by joining them with commas (`duplicatedIds.join(', ')`).
+
+### Example Alert Output:
+
+If the Excel file contains rows with `id` values `1` and `2`, the alert will display:
+
+```
+The following IDs were rejected due to duplication: 1, 2
+```
+
+### Additional Considerations:
+- This approach gives users a clear list of which `id`s were rejected due to duplication.
+- You can further customize the alert to provide more details or handle the error in other ways, such as showing the duplicated IDs in the UI instead of an alert.
