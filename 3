@@ -1,3 +1,36 @@
+const onCellValueChanged = (event: any) => {
+  const { data, colDef } = event;
+  const rowId = data.id;
+  const field = colDef.field;
+
+  const isChanged = true;  // Your logic to determine if the cell value has changed
+
+  setEditedCells((prev) => {
+    if (isChanged) {
+      // Add the cell to the editedCells if it's changed and not already in the list
+      const cellAlreadyEdited = prev.some(cell => cell.rowId === rowId && cell.field === field);
+      if (!cellAlreadyEdited) {
+        return [...prev, { rowId, field }];
+      }
+      return prev;
+    } else {
+      // If the cell hasn't changed, remove it from the editedCells list
+      return prev.filter(cell => !(cell.rowId === rowId && cell.field === field));
+    }
+  });
+
+  // Refresh the specific row to apply or remove the highlight
+  event.api.refreshCells({
+    force: true,
+    rowNodes: [event.node],
+  });
+};
+
+
+
+
+
+
 To adapt the solution for TypeScript, you'll need to define types for `editedCells`, `setEditedCells`, and other relevant functions. Here's how you can implement it using TypeScript:
 
 ### Step 1: Define the Context for `editedCells` in TypeScript
