@@ -1,0 +1,164 @@
+The issue you're encountering with AG Grid, where the background color of the edited cells spills over to the entire column after filtering and unfiltering, is likely due to how the `cellStyle` or `cellClass` is being applied. When you apply styles directly to cells, AG Grid will attempt to re-render the grid after certain actions (like filtering), and if the state tracking edited cells isn't properly maintained, it can apply styles indiscriminately to entire columns instead of individual cells.
+
+To solve this problem, you need to make sure that you're applying the background color only to specific cells, even after filtering. Here's how to address this:
+
+### Solution: Ensure Consistent Style Application Based on State
+
+1. **Track Edited Cells**: Ensure that you are maintaining a list of edited cells, indexed by their row ID and column field. This will allow you to apply styles only to those specific cells, even when filtering or unfiltering.
+
+2. **Update `getCellStyle` or `getCellClass` Dynamically**: You should use `getCellStyle` (or `getCellClass`) to conditionally apply the background color based on whether a cell was edited, and make sure this logic does not apply styles to an entire column.
+
+3. **Ensure Proper Refresh on Filtering**: When filters are applied or removed, ensure that the grid properly refreshes the cell styles based on the tracked edited cells.
+
+Here’s a breakdown of how you can manage this.
+
+### Step 1: Track Edited Cells in State
+
+Ensure that you have a state or ref that stores a list of edited cells:
+
+```javascript
+const [editedCells, setEditedCells] = useState([]);
+```
+
+Each edited cell can be stored as an object with `rowId` and `field` (the column key):
+
+```javascript
+const onCellValueChanged = (event) => {
+  const { data, colDef } = event;
+  const rowId = data.id;  // Your row identifier
+  const field = colDef.field;  // Column field
+
+  // Check if the data changed and update the edited cells list
+  const isChanged = true;  // Your logic to detect changes
+  
+  if (isChanged) {
+    setEditedCells((prev) => [...prev, { rowId, field }]);
+  }
+
+  event.api.refreshCells({
+    force: true,
+    rowNodes: [event.node],  // Refresh the specific row
+  });
+};
+```
+
+### Step 2: Apply Styles Conditionally with `getCellStyle`
+
+Now, use the `getCellStyle` function to check if a cell is in the `editedCells` list, and apply styles accordingly:
+
+```javascript
+const getCellStyle = (params) => {
+  const cellIsEdited = editedCells.some(cell => 
+    cell.rowId === params.data.id && cell.field === params.colDef.field
+  );
+
+  if (cellIsEdited) {
+    return { backgroundColor: '#FFFFC5' }; // Style for edited cells
+  }
+
+  return null;  // Default styling
+};
+```
+
+### Step 3: Ensure Proper Refresh on Filter Change
+
+To prevent the style from spilling over to the whole column after filtering, you need to refresh the cells properly after filters are applied or removed. You can use the `onFilterChanged` event to trigger a refresh:
+
+```javascript
+const onFilterChanged = (params) => {
+  params.api.refreshCells({
+    force: true,
+  });
+};
+```
+
+Add this event listener to your AG Grid component:
+
+```jsx
+<AgGridReact
+  columnDefs={[
+    { headerName: 'Column 1', field: 'column1', getCellStyle },
+    { headerName: 'Column 2', field: 'column2', getCellStyle },
+    // other columns...
+  ]}
+  onCellValueChanged={onCellValueChanged}
+  onFilterChanged={onFilterChanged}
+  // other AG Grid properties...
+/>
+```
+
+### Step 4: Use the Right Refresh Method
+
+If you are experiencing issues with filtering or other actions that might cause unexpected behavior, try using `refreshCells()` or `refreshClientSideRowModel()` after the grid actions to ensure proper re-rendering:
+
+```javascript
+params.api.refreshClientSideRowModel('filter');
+```
+
+This forces AG Grid to refresh the internal data model, which should respect the styles you set on individual cells rather than applying them to the whole column.
+
+### Complete Example
+
+```javascript
+import React, { useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+
+const YourAgGridComponent = () => {
+  const [editedCells, setEditedCells] = useState([]);
+
+  const getCellStyle = (params) => {
+    const cellIsEdited = editedCells.some(cell => 
+      cell.rowId === params.data.id && cell.field === params.colDef.field
+    );
+
+    if (cellIsEdited) {
+      return { backgroundColor: '#FFFFC5' }; // Style for edited cells
+    }
+
+    return null;  // Default styling
+  };
+
+  const onCellValueChanged = (event) => {
+    const { data, colDef } = event;
+    const rowId = data.id;
+    const field = colDef.field;
+
+    const isChanged = true;  // Your logic for detecting change
+
+    if (isChanged) {
+      setEditedCells((prev) => [...prev, { rowId, field }]);
+    }
+
+    event.api.refreshCells({
+      force: true,
+      rowNodes: [event.node],
+    });
+  };
+
+  const onFilterChanged = (params) => {
+    params.api.refreshCells({
+      force: true,
+    });
+  };
+
+  const columnDefs = [
+    { headerName: 'Column 1', field: 'column1', getCellStyle },
+    { headerName: 'Column 2', field: 'column2', getCellStyle },
+    // other columns...
+  ];
+
+  return (
+    <AgGridReact
+      columnDefs={columnDefs}
+      onCellValueChanged={onCellValueChanged}
+      onFilterChanged={onFilterChanged}
+      // other AG Grid properties...
+    />
+  );
+};
+
+export default YourAgGridComponent;
+```
+
+### Conclusion
+By maintaining a proper record of edited cells and using `getCellStyle` dynamically for each cell, you can ensure that only the intended cells are styled, even after filtering or other actions in AG Grid. You also need to make sure the grid properly refreshes to avoid styles being applied to entire columns.
