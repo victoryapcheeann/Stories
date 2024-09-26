@@ -1,3 +1,163 @@
+To adapt the solution for TypeScript, you'll need to define types for `editedCells`, `setEditedCells`, and other relevant functions. Here's how you can implement it using TypeScript:
+
+### Step 1: Define the Context for `editedCells` in TypeScript
+
+First, create your context with proper types for `editedCells` and `setEditedCells`.
+
+```tsx
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+// Define the shape of each edited cell
+interface EditedCell {
+  rowId: number | string;
+  field: string;
+}
+
+// Define the context type
+interface EditedCellsContextType {
+  editedCells: EditedCell[];
+  setEditedCells: React.Dispatch<React.SetStateAction<EditedCell[]>>;
+}
+
+// Create context with a default value
+const EditedCellsContext = createContext<EditedCellsContextType | undefined>(undefined);
+
+// Custom hook to use the EditedCellsContext
+export const useEditedCells = (): EditedCellsContextType => {
+  const context = useContext(EditedCellsContext);
+  if (!context) {
+    throw new Error('useEditedCells must be used within a EditedCellsProvider');
+  }
+  return context;
+};
+
+// Provider component with children typed as ReactNode
+export const EditedCellsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [editedCells, setEditedCells] = useState<EditedCell[]>([]);
+
+  return (
+    <EditedCellsContext.Provider value={{ editedCells, setEditedCells }}>
+      {children}
+    </EditedCellsContext.Provider>
+  );
+};
+```
+
+### Step 2: Wrap Your App with the Provider
+
+In the root or main component, wrap your application with the `EditedCellsProvider`:
+
+```tsx
+import { EditedCellsProvider } from './EditedCellsContext'; // Adjust the path as necessary
+import YourAgGridComponent from './YourAgGridComponent'; // Adjust the path as necessary
+
+const App: React.FC = () => {
+  return (
+    <EditedCellsProvider>
+      <YourAgGridComponent />
+    </EditedCellsProvider>
+  );
+};
+
+export default App;
+```
+
+### Step 3: Access `editedCells` and `setEditedCells` in the Column Definitions File
+
+When defining the `columnDefs` in the separate file, use the `useEditedCells` hook and ensure you add the correct types to the AG Grid cell functions.
+
+```tsx
+import { useEditedCells } from './EditedCellsContext'; // Adjust the path as necessary
+import { ColDef } from 'ag-grid-community'; // Import types from ag-grid
+
+const columnDefs = (): ColDef[] => {
+  const { editedCells } = useEditedCells();
+
+  const getCellStyle = (params: any) => {
+    const cellIsEdited = editedCells.some(cell =>
+      cell.rowId === params.data.id && cell.field === params.colDef.field
+    );
+
+    if (cellIsEdited) {
+      return { backgroundColor: '#FFFFC5' }; // Style for edited cells
+    }
+
+    return null;  // Default styling
+  };
+
+  return [
+    { headerName: 'Column 1', field: 'column1', getCellStyle },
+    { headerName: 'Column 2', field: 'column2', getCellStyle },
+    // other columns...
+  ];
+};
+
+export default columnDefs;
+```
+
+### Step 4: Update `onCellValueChanged` in the Grid Component
+
+In the component where AG Grid is used, ensure the `onCellValueChanged` event is typed correctly. Use `setEditedCells` from the context.
+
+```tsx
+import React from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import { useEditedCells } from './EditedCellsContext'; // Adjust the path as necessary
+import columnDefs from './columnDefs'; // Adjust the path as necessary
+import { GridOptions } from 'ag-grid-community'; // Import AG Grid types
+
+const YourAgGridComponent: React.FC = () => {
+  const { setEditedCells } = useEditedCells();
+
+  const onCellValueChanged = (event: any) => {
+    const { data, colDef } = event;
+    const rowId = data.id;
+    const field = colDef.field;
+
+    const isChanged = true;  // Add your logic to detect changes
+
+    if (isChanged) {
+      setEditedCells((prev) => [...prev, { rowId, field }]);
+    }
+
+    event.api.refreshCells({
+      force: true,
+      rowNodes: [event.node],
+    });
+  };
+
+  const gridOptions: GridOptions = {
+    columnDefs: columnDefs(),
+    onCellValueChanged,
+    // other grid options...
+  };
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
+      <AgGridReact
+        gridOptions={gridOptions}
+        // other grid props...
+      />
+    </div>
+  );
+};
+
+export default YourAgGridComponent;
+```
+
+### Key TypeScript Types to Note:
+- **`EditedCell`**: This interface represents the shape of each edited cell, including `rowId` and `field`.
+- **`EditedCellsContextType`**: The context type that ensures both `editedCells` and `setEditedCells` are correctly typed.
+- **`ColDef`**: AG Grid’s column definition type.
+- **`GridOptions`**: AG Grid’s options type.
+
+### Conclusion
+
+Using React Context with TypeScript in this way ensures your `editedCells` and `setEditedCells` are globally accessible, type-safe, and manageable from any component. By keeping the state in a centralized context, you avoid prop drilling and make the application more scalable and maintainable.
+
+
+
+
 Yes, moving `editedCells` and `setEditedCells` to a context is a good idea, especially if you're defining `columnDefs` in a different file. This approach will centralize the management of the edited cells, making your state management cleaner and avoiding prop drilling.
 
 Here’s how you can implement it:
