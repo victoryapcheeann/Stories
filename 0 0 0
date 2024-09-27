@@ -1,18 +1,26 @@
-def encode_file_to_base64(file_path: str) -> dict:
-    """Encode a file to base64 and return along with its MIME type."""
+from fastapi import FastAPI, File, UploadFile
+import base64
+import mimetypes
+
+app = FastAPI()
+
+@app.post("/upload-file/")
+async def upload_file(file: UploadFile = File(...)):
+    """Accepts an uploaded file, encodes it to base64, and returns the encoded content and MIME type."""
+    # Get the file's content (as binary)
+    file_content = await file.read()
+
     # Detect the file's MIME type based on its file extension
-    mime_type, _ = mimetypes.guess_type(file_path)
-    
+    mime_type, _ = mimetypes.guess_type(file.filename)
+
     # If MIME type cannot be detected, default to 'application/octet-stream'
     if mime_type is None:
         mime_type = 'application/octet-stream'
     
-    # Read and encode the file
-    with open(file_path, 'rb') as file:
-        file_content = file.read()
-        encoded_content = base64.b64encode(file_content).decode('utf-8')
+    # Encode the file content to base64
+    encoded_content = base64.b64encode(file_content).decode('utf-8')
     
-    # Return a dictionary containing the encoded content and the MIME type
+    # Return the base64 encoded content and MIME type
     return {
         'encoded_content': encoded_content,
         'mime_type': mime_type
