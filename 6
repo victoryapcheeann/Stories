@@ -1,0 +1,25 @@
+import base64
+
+def encode_file_to_base64(file_path: str) -> str:
+    """Encode a file to base64"""
+    with open(file_path, 'rb') as file:
+        file_content = file.read()
+        encoded_content = base64.b64encode(file_content).decode('utf-8')
+    return encoded_content
+
+# Example usage:
+file_path = 'example.pdf'  # Path to the file to be encoded
+encoded_file = encode_file_to_base64(file_path)
+print(f"Encoded file content: {encoded_file[:100]}...")  # Print first 100 characters for a preview
+
+
+def decode_base64_to_file(encoded_content: str, output_path: str) -> None:
+    """Decode a base64 string and write it to a file"""
+    with open(output_path, 'wb') as output_file:
+        decoded_content = base64.b64decode(encoded_content)
+        output_file.write(decoded_content)
+
+# Example usage:
+output_path = 'decoded_example.pdf'  # Output file path for the decoded file
+decode_base64_to_file(encoded_file, output_path)
+print(f"File has been decoded and saved to {output_path}")
