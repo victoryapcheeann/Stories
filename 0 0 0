@@ -1,0 +1,19 @@
+def encode_file_to_base64(file_path: str) -> dict:
+    """Encode a file to base64 and return along with its MIME type."""
+    # Detect the file's MIME type based on its file extension
+    mime_type, _ = mimetypes.guess_type(file_path)
+    
+    # If MIME type cannot be detected, default to 'application/octet-stream'
+    if mime_type is None:
+        mime_type = 'application/octet-stream'
+    
+    # Read and encode the file
+    with open(file_path, 'rb') as file:
+        file_content = file.read()
+        encoded_content = base64.b64encode(file_content).decode('utf-8')
+    
+    # Return a dictionary containing the encoded content and the MIME type
+    return {
+        'encoded_content': encoded_content,
+        'mime_type': mime_type
+    }
