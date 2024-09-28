@@ -1,3 +1,74 @@
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+import base64
+import os
+
+app = FastAPI()
+
+ENCODED_FILE_PATH = "encoded_files"  # Folder where encoded files are stored
+DECODED_FILE_PATH = "decoded_files"  # Folder where decoded files will be saved
+
+# Hardcoded file values for testing
+HARDCODED_FILE_NAME = "example.pdf"  # Hardcoded file name
+HARDCODED_MIME_TYPE = "application/pdf"  # Hardcoded MIME type
+
+@app.get("/download-file/")
+async def download_file():
+    """Decode the hardcoded base64 file and return the decoded file for download."""
+    try:
+        # Hardcoded encoded file path
+        encoded_file_path = os.path.join(ENCODED_FILE_PATH, f"{HARDCODED_FILE_NAME}.txt")
+        
+        # Check if the hardcoded encoded file exists
+        if not os.path.exists(encoded_file_path):
+            raise HTTPException(status_code=404, detail=f"Encoded file not found at {encoded_file_path}")
+        
+        # Log to check the file path
+        print(f"Encoded file path: {encoded_file_path}")
+        
+        # Open and read the encoded file (ensuring correct file read mode)
+        try:
+            with open(encoded_file_path, 'r') as encoded_file:
+                encoded_content = encoded_file.read()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to read encoded file: {str(e)}")
+        
+        # Log to check the length of the encoded content
+        print(f"Encoded content length: {len(encoded_content)}")
+
+        # Decode the base64 content
+        try:
+            decoded_content = base64.b64decode(encoded_content)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to decode base64 content: {str(e)}")
+        
+        # Hardcoded decoded file path
+        decoded_file_path = os.path.join(DECODED_FILE_PATH, HARDCODED_FILE_NAME)
+        
+        # Save the decoded content to a file
+        try:
+            with open(decoded_file_path, 'wb') as decoded_file:
+                decoded_file.write(decoded_content)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to save decoded file: {str(e)}")
+
+        # Verify if the file was successfully saved
+        if not os.path.exists(decoded_file_path):
+            raise HTTPException(status_code=500, detail="Decoded file could not be saved")
+
+        # Serve the decoded file for download
+        return FileResponse(decoded_file_path, media_type=HARDCODED_MIME_TYPE, filename=HARDCODED_FILE_NAME)
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+
+
+
+
+
+
+
 @app.get("/download-file/")
 async def download_file():
     """Decode the hardcoded base64 file and return the decoded file for download."""
