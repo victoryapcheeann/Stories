@@ -1,3 +1,39 @@
+import React from 'react';
+
+function FileDownloadComponent() {
+  const handleDownload = async () => {
+    // Fetch the encoded file from the backend
+    const response = await fetch('/get-encoded-file');
+    const { encoded_content, mime_type } = await response.json();
+
+    // Decode the base64 content into binary
+    const byteCharacters = atob(encoded_content);  // Decode base64 string to binary characters
+    const byteNumbers = Array.from(byteCharacters).map((char) => char.charCodeAt(0));  // Convert to byte numbers
+    const byteArray = new Uint8Array(byteNumbers);  // Create a Uint8Array from byte numbers
+
+    // Create a Blob from the byte array
+    const blob = new Blob([byteArray], { type: mime_type });
+
+    // Create a link element and trigger download
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'example.pdf';  // You can set the file name dynamically
+    link.click();  // Trigger the download
+  };
+
+  return (
+    <div>
+      <button onClick={handleDownload}>Download File</button>
+    </div>
+  );
+}
+
+export default FileDownloadComponent;
+
+
+
+
+
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 import base64
