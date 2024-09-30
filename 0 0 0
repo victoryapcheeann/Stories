@@ -1,3 +1,172 @@
+
+Got it! Since each step has its own unique parameters and there's no need for shared `stepData`, we can adjust the code to accommodate this.
+
+You’ll still pass the steps dynamically, but each step will have its own custom parameters. Here’s how to approach it:
+
+### File 1: `ParentComponent.tsx`
+The `ParentComponent` dynamically renders the steps based on the list of components passed, but it does not rely on any shared data. Instead, each step component will manage its own parameters.
+
+```tsx
+// ParentComponent.tsx
+import React, { useState } from 'react';
+import { Stepper, Step } from 'martine-ui'; // Adjust for your UI library
+import { StepConfig } from './types'; // Import shared types
+
+interface ParentComponentProps {
+  steps: StepConfig[];  // List of steps passed dynamically
+}
+
+export const ParentComponent: React.FC<ParentComponentProps> = ({ steps }) => {
+  const [activeStep, setActiveStep] = useState<number>(0);
+
+  const handleNext = () => {
+    if (activeStep < steps.length - 1) {
+      setActiveStep((prevStep) => prevStep + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (activeStep > 0) {
+      setActiveStep((prevStep) => prevStep - 1);
+    }
+  };
+
+  // Dynamically access the step component from the steps array
+  const StepComponent = steps[activeStep].component;
+
+  return (
+    <div>
+      <Stepper activeStep={activeStep}>
+        {steps.map((step, index) => (
+          <Step key={index}>{step.label}</Step>
+        ))}
+      </Stepper>
+
+      {/* Render the current step component and pass onPrev/onNext */}
+      <StepComponent
+        onNext={activeStep < steps.length - 1 ? handleNext : undefined}
+        onPrev={activeStep > 0 ? handlePrev : undefined}
+      />
+
+      <div>
+        <button disabled={activeStep === 0} onClick={handlePrev}>
+          Back
+        </button>
+        <button onClick={handleNext}>
+          {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+        </button>
+      </div>
+    </div>
+  );
+};
+```
+
+### File 2: `Steps.tsx`
+Each step component now manages its own parameters independently. The parameters can be anything the step needs, passed directly to the component.
+
+```tsx
+// Steps.tsx
+import React from 'react';
+import { StepProps } from './types'; // Import shared types
+
+// Step1 accepts its own custom parameters along with onNext/onPrev
+export const Step1: React.FC<StepProps> = ({ onNext, onPrev }) => {
+  const customParam1 = 'Custom data for Step 1'; // Unique parameter for this step
+
+  return (
+    <div>
+      <h2>Step 1</h2>
+      <p>{customParam1}</p>
+      {onPrev && <button onClick={onPrev}>Back</button>}
+      {onNext && <button onClick={onNext}>Next</button>}
+    </div>
+  );
+};
+
+// Step2 has different parameters
+export const Step2: React.FC<StepProps> = ({ onNext, onPrev }) => {
+  const customParam2 = 42; // Unique parameter for Step 2
+
+  return (
+    <div>
+      <h2>Step 2</h2>
+      <p>Custom Param: {customParam2}</p>
+      {onPrev && <button onClick={onPrev}>Back</button>}
+      {onNext && <button onClick={onNext}>Next</button>}
+    </div>
+  );
+};
+
+// Step3 also has its own parameters
+export const Step3: React.FC<StepProps> = ({ onPrev }) => {
+  const customParam3 = true; // Unique parameter for Step 3
+
+  return (
+    <div>
+      <h2>Step 3</h2>
+      <p>{customParam3 ? 'Step 3 is active' : 'Inactive'}</p>
+      {onPrev && <button onClick={onPrev}>Back</button>}
+      {/* No next button for the last step */}
+    </div>
+  );
+};
+```
+
+### File 3: `types.ts`
+You still need to define the shared types to ensure consistency in handling `onNext` and `onPrev`.
+
+```ts
+// types.ts
+export interface StepProps {
+  onNext?: () => void;
+  onPrev?: () => void;
+}
+
+export interface StepConfig {
+  label: string;
+  component: React.ComponentType<StepProps>;
+}
+```
+
+### File 4: `App.tsx`
+This is where you pass the steps list to the `ParentComponent`. Each step is passed dynamically with its custom parameters embedded in the step itself.
+
+```tsx
+// App.tsx
+import React from 'react';
+import { ParentComponent } from './ParentComponent';
+import { Step1, Step2, Step3 } from './Steps';
+import { StepConfig } from './types';
+
+// Define the steps array with labels and corresponding step components
+const steps: StepConfig[] = [
+  { label: 'Step 1', component: Step1 },
+  { label: 'Step 2', component: Step2 },
+  { label: 'Step 3', component: Step3 },
+];
+
+const App: React.FC = () => {
+  return <ParentComponent steps={steps} />;
+};
+
+export default App;
+```
+
+### Summary:
+- **Dynamic Step Management**: The `ParentComponent` handles which step to render without needing shared `stepData`. It dynamically renders the components based on the `steps` list passed in.
+- **Custom Parameters**: Each step can define and manage its own parameters, and these parameters are specific to each step. For example, `Step1` might display a string, `Step2` might display a number, and `Step3` might handle a boolean.
+- **Conditional `onPrev`/`onNext`**: The `onPrev` and `onNext` handlers are passed to each step conditionally based on the current step’s position in the list. The first step doesn’t have `onPrev`, and the last step doesn’t have `onNext`.
+
+This structure allows full flexibility, where each step component has its own set of parameters and behavior, and the stepper simply controls the flow without needing to import or hard-code any step directly into the parent component.
+
+
+
+
+
+
+
+
+
 If your steps (components) are being imported and passed as parameters, you can structure your code in a way that allows dynamic rendering of these steps, making it reusable and scalable without needing to manually hard-code each step.
 
 Here’s an improved version that accommodates dynamically imported steps passed as parameters:
