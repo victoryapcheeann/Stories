@@ -1,3 +1,141 @@
+If your steps (components) are being imported and passed as parameters, you can structure your code in a way that allows dynamic rendering of these steps, making it reusable and scalable without needing to manually hard-code each step.
+
+Here’s an improved version that accommodates dynamically imported steps passed as parameters:
+
+### Approach:
+
+1. **Pass Step Components as Parameters**: Instead of hardcoding the components in the parent component, you can pass an array of components as a prop or parameter.
+   
+2. **Manage State for the Current Step**: You can keep track of the current step using `useState` and then dynamically render the appropriate component from the array.
+
+3. **Pass Required Props to Each Step**: The parent can handle common logic like `onNext`, `onBack`, and any shared data, which can be passed to the steps.
+
+### Example in TypeScript:
+
+```tsx
+import React, { useState } from 'react';
+import { Stepper, Step } from 'martine-ui'; // Adjust the import for your UI library
+
+interface StepProps {
+  onNext: () => void;
+  onBack: () => void;
+  stepData: StepData;
+}
+
+interface StepData {
+  param1: string;
+  param2: number;
+  param3: boolean;
+  // Add more as needed
+}
+
+interface StepConfig {
+  label: string;
+  component: React.ComponentType<StepProps>;
+}
+
+interface ParentComponentProps {
+  steps: StepConfig[];
+}
+
+const ParentComponent: React.FC<ParentComponentProps> = ({ steps }) => {
+  const [activeStep, setActiveStep] = useState<number>(0);
+  const [stepData, setStepData] = useState<StepData>({
+    param1: 'Initial value',
+    param2: 42,
+    param3: true,
+    // Initialize other parameters
+  });
+
+  const handleNext = () => {
+    setActiveStep((prevStep) => prevStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevStep) => prevStep - 1);
+  };
+
+  const StepComponent = steps[activeStep].component;
+
+  return (
+    <div>
+      <Stepper activeStep={activeStep}>
+        {steps.map((step, index) => (
+          <Step key={index}>{step.label}</Step>
+        ))}
+      </Stepper>
+
+      <StepComponent onNext={handleNext} onBack={handleBack} stepData={stepData} />
+
+      <div>
+        <button disabled={activeStep === 0} onClick={handleBack}>
+          Back
+        </button>
+        <button onClick={handleNext}>
+          {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Example step components
+const Step1: React.FC<StepProps> = ({ onNext, onBack, stepData }) => (
+  <div>
+    <h2>Step 1</h2>
+    <p>Param1: {stepData.param1}</p>
+    <button onClick={onNext}>Next</button>
+  </div>
+);
+
+const Step2: React.FC<StepProps> = ({ onNext, onBack, stepData }) => (
+  <div>
+    <h2>Step 2</h2>
+    <p>Param2: {stepData.param2}</p>
+    <button onClick={onBack}>Back</button>
+    <button onClick={onNext}>Next</button>
+  </div>
+);
+
+// Usage of ParentComponent with dynamic steps
+const steps: StepConfig[] = [
+  { label: 'Step 1', component: Step1 },
+  { label: 'Step 2', component: Step2 },
+  // Add more steps dynamically
+];
+
+const App: React.FC = () => {
+  return <ParentComponent steps={steps} />;
+};
+
+export default App;
+```
+
+### Breakdown:
+
+1. **Dynamic Step Rendering**: 
+   - The `ParentComponent` takes an array of `steps` as a prop, where each step contains a label and a corresponding component.
+   - It renders the current step dynamically using `steps[activeStep].component`.
+
+2. **Common Logic in Parent Component**:
+   - Functions like `handleNext`, `handleBack`, and any shared data (`stepData`) are managed by the parent component and passed down to each step component via props.
+
+3. **Step Components**:
+   - Each step component (`Step1`, `Step2`, etc.) receives `onNext`, `onBack`, and `stepData` as props. This keeps the individual steps flexible and reusable.
+
+4. **Dynamic Step List**:
+   - You can dynamically modify the steps list (`steps`), and the `ParentComponent` will render the appropriate step and manage transitions between steps without needing to modify the core logic.
+
+### Advantages:
+- **Reusability**: The `ParentComponent` can handle any number of steps, and you only need to pass them as parameters.
+- **Maintainability**: You can easily add, remove, or modify steps without changing the core stepper logic.
+- **Scalability**: This approach can handle complex flows where each step might have very different logic or forms.
+
+By using this approach, you can manage steps more efficiently, even if the number of parameters or the complexity of each step grows.
+
+
+
+
 Here's the same approach, but using TypeScript:
 
 ```tsx
