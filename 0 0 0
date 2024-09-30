@@ -1,3 +1,85 @@
+Yes, it is possible to make the Martine UI stepper function reusable with different components for each part. Here’s how you can approach it:
+
+1. **Create a Parent Component**: This will hold the stepper state and manage the steps. The parent component will pass down the current step and the `onNext` function to the child components.
+
+2. **Define the Stepper Logic**: The parent component will control the progression through the steps, keeping track of the current step and passing the step change logic (`onNext`, `onPrevious`) to the child components.
+
+3. **Pass onNext as Props**: For each step component, pass the `onNext` function as a prop so that each component can trigger the next step when needed.
+
+4. **Handle Dynamic Logic in onNext**: In the parent component, `onNext` can be designed to handle different logic for different steps, either by using conditions or by attaching specific logic to the respective step.
+
+Here’s a rough outline in React:
+
+```jsx
+import { useState } from 'react';
+import { Stepper, Step } from 'martine-ui'; // Adjust as needed for your UI library
+
+const ParentComponent = () => {
+  const [activeStep, setActiveStep] = useState(0);
+
+  const handleNext = () => {
+    setActiveStep(prevStep => prevStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep(prevStep => prevStep - 1);
+  };
+
+  const steps = [
+    { label: 'Step 1', content: <Step1 onNext={handleNext} /> },
+    { label: 'Step 2', content: <Step2 onNext={handleNext} /> },
+    { label: 'Step 3', content: <Step3 onNext={handleNext} /> },
+  ];
+
+  return (
+    <div>
+      <Stepper activeStep={activeStep}>
+        {steps.map((step, index) => (
+          <Step key={index}>{step.label}</Step>
+        ))}
+      </Stepper>
+      {steps[activeStep].content}
+      <button disabled={activeStep === 0} onClick={handleBack}>Back</button>
+      <button onClick={handleNext}>Next</button>
+    </div>
+  );
+};
+
+const Step1 = ({ onNext }) => (
+  <div>
+    <p>Step 1 Content</p>
+    <button onClick={onNext}>Next</button>
+  </div>
+);
+
+const Step2 = ({ onNext }) => (
+  <div>
+    <p>Step 2 Content</p>
+    <button onClick={onNext}>Next</button>
+  </div>
+);
+
+const Step3 = ({ onNext }) => (
+  <div>
+    <p>Step 3 Content</p>
+    <button onClick={onNext}>Finish</button>
+  </div>
+);
+
+export default ParentComponent;
+```
+
+**Key Concepts**:
+- Each step is represented by a separate component that receives the `onNext` function as a prop.
+- The parent component manages the stepper's state and handles advancing the steps.
+- You can customize the `onNext` function in the parent component to handle different logic per step.
+
+This approach keeps the stepper reusable and allows you to pass unique logic to each step.
+
+
+
+
+
 import React from 'react';
 
 function FileDownloadComponent() {
