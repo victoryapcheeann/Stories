@@ -1,3 +1,99 @@
+Here's the same approach, but using TypeScript:
+
+```tsx
+import { useState } from 'react';
+import { Stepper, Step } from 'martine-ui'; // Adjust the import for your UI library
+
+interface StepProps {
+  onNext: () => void;
+}
+
+const ParentComponent: React.FC = () => {
+  const [activeStep, setActiveStep] = useState<number>(0);
+
+  const handleNext = () => {
+    setActiveStep((prevStep) => prevStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevStep) => prevStep - 1);
+  };
+
+  const steps: Array<{ label: string; content: JSX.Element }> = [
+    { label: 'Step 1', content: <Step1 onNext={handleNext} /> },
+    { label: 'Step 2', content: <Step2 onNext={handleNext} /> },
+    { label: 'Step 3', content: <Step3 onNext={handleNext} /> },
+  ];
+
+  return (
+    <div>
+      <Stepper activeStep={activeStep}>
+        {steps.map((step, index) => (
+          <Step key={index}>{step.label}</Step>
+        ))}
+      </Stepper>
+      {steps[activeStep].content}
+      <button disabled={activeStep === 0} onClick={handleBack}>
+        Back
+      </button>
+      <button onClick={handleNext}>Next</button>
+    </div>
+  );
+};
+
+const Step1: React.FC<StepProps> = ({ onNext }) => (
+  <div>
+    <p>Step 1 Content</p>
+    <button onClick={onNext}>Next</button>
+  </div>
+);
+
+const Step2: React.FC<StepProps> = ({ onNext }) => (
+  <div>
+    <p>Step 2 Content</p>
+    <button onClick={onNext}>Next</button>
+  </div>
+);
+
+const Step3: React.FC<StepProps> = ({ onNext }) => (
+  <div>
+    <p>Step 3 Content</p>
+    <button onClick={onNext}>Finish</button>
+  </div>
+);
+
+export default ParentComponent;
+```
+
+### Explanation of TypeScript Usage:
+
+1. **Defining Props Interface**: The `StepProps` interface defines the props that each step component (`Step1`, `Step2`, etc.) will receive. Here, `onNext` is a function that returns `void`, which means it doesn't return a value.
+
+    ```ts
+    interface StepProps {
+      onNext: () => void;
+    }
+    ```
+
+2. **Type Annotations for useState**: The `useState` hook is typed as `number` since `activeStep` will always be a number.
+
+    ```ts
+    const [activeStep, setActiveStep] = useState<number>(0);
+    ```
+
+3. **Type Annotations for Steps Array**: The `steps` array is typed as an array of objects containing `label` (a `string`) and `content` (a `JSX.Element`).
+
+    ```ts
+    const steps: Array<{ label: string; content: JSX.Element }> = ...
+    ```
+
+4. **Step Components**: Each step component (like `Step1`, `Step2`) is typed as `React.FC<StepProps>`, meaning it’s a functional component that accepts `StepProps`.
+
+This ensures type safety, especially when passing functions like `onNext` between components. It will help catch errors early in development while keeping the code reusable.
+
+
+
+
 Yes, it is possible to make the Martine UI stepper function reusable with different components for each part. Here’s how you can approach it:
 
 1. **Create a Parent Component**: This will hold the stepper state and manage the steps. The parent component will pass down the current step and the `onNext` function to the child components.
