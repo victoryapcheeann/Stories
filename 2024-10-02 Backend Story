@@ -105,3 +105,25 @@ The clear and consistent naming conventions in frameworks like React create a sh
 Just as modern frameworks like React have prioritized readability and intuitive naming to boost productivity, the same should be done in database design. Bad SQL naming conventions, like older frameworks, create unnecessary friction. Developers waste time trying to decode or cross-reference names instead of focusing on the actual task at hand. Clear names, on the other hand, make everyone more efficient, from the person writing queries to those developing backend logic and even newcomers joining the team.
 In short, modern frameworks like React have proven that clear, meaningful names are key to productivity and collaboration—just as in database management, where good naming conventions significantly improve the flow of development.
 
+
+
+1. Legacy Systems:
+Many banking companies operate on legacy systems that have been in place for decades. These systems were often designed with older naming conventions and practices that have simply persisted over time. Since making changes to a long-standing, mission-critical database can be risky and resource-intensive, companies may avoid modernizing their naming conventions unless absolutely necessary.
+2. Stability and Proven Practices:
+Banking institutions are generally conservative and prioritize stability and reliability over modernization. They tend to stick with what has been proven to work over the years. Older naming conventions may be part of well-established processes that have stood the test of time. For banks, maintaining consistency and predictability is more important than adopting the latest trends.
+3. Regulatory and Compliance Constraints:
+In banking, there are regulatory and compliance requirements that may enforce certain naming standards, especially for data storage and reporting. Some regulations may encourage sticking with older naming conventions for clarity, ensuring that any regulatory audits or reports are understandable by external stakeholders who are also familiar with these conventions.
+4. Organizational Inertia:
+Large organizations, especially in banking, are prone to organizational inertia, meaning they resist change unless there’s a clear, immediate benefit. Changing the naming conventions for tables and columns across a large banking system could have far-reaching consequences, impacting thousands of queries, reports, and applications. This makes many companies reluctant to adopt modern naming standards.
+5. Training and Familiarity:
+Many seasoned developers and database administrators in banking environments have been trained in the older conventions and are deeply familiar with them. Switching to more modern naming approaches could introduce a learning curve for those who have been using a specific style for years. As a result, companies may stick to the older way to avoid retraining staff and maintain productivity.
+6. Consistency Across Teams and Projects:
+Banking companies often have large teams working on multiple projects across different departments. Maintaining consistent naming conventions across all these teams ensures that everyone is aligned and understands how to work with the data. Introducing modern, more descriptive naming conventions could create inconsistencies across legacy and new systems, making it harder for teams to collaborate.
+7. Vendor or Tool Constraints:
+Banks often use specialized vendor software or tools that rely on specific naming standards. These systems may have been designed with older naming conventions, and changing the naming strategy would require reworking vendor integrations, leading to increased costs and risks.
+8. Complexity of Migration:
+Modernizing the naming convention in a banking system requires a significant migration effort, as SQL queries, stored procedures, and applications depend on the old names. Even with tools like ORM (Object-Relational Mapping), updating database names involves extensive testing and risk of breaking existing functionality. Given the size and complexity of most banking systems, the cost of such a migration often outweighs the perceived benefits.
+9. Fear of Introducing Bugs:
+Changing naming conventions means changing how the system interacts with the database, which could introduce bugs or performance issues. Banks are highly risk-averse, as even a minor bug in a critical system could have massive financial or reputational repercussions. Therefore, they may prefer to stick with older, familiar conventions to minimize the risk of introducing new issues.
+10. Balance Between Old and New:
+Some banking companies prefer to focus on modernizing at the application level (e.g., using modern frameworks like React or FastAPI) while keeping the backend, including SQL, stable and consistent with older practices. This balance allows them to introduce new, agile features to users without disrupting their core databases, which remain structured in a more traditional way.
