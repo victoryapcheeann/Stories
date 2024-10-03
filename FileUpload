@@ -1,3 +1,92 @@
+https://stackoverflow.com/questions/61458062/sql-column-naming-best-practice-should-i-use-abbreviation
+https://stackoverflow.com/questions/7662/database-table-and-column-naming-conventions
+
+Yes, the **AdventureWorks** database is a popular sample database provided by Microsoft, and you can find online lists of its tables and columns. Here are some **examples** of tables with long column names:
+
+### Example 1: Table `Person.Person`
+This table stores information about people in the AdventureWorks database.
+
+**Columns:**
+- `BusinessEntityID`
+- `PersonType`
+- `NameStyle`
+- `Title`
+- `FirstName`
+- `MiddleName`
+- `LastName`
+- `Suffix`
+- `EmailPromotion`
+- `AdditionalContactInfo`
+- `Demographics`
+
+### Example 2: Table `Sales.SalesOrderDetail`
+This table stores information about individual sales order details.
+
+**Columns:**
+- `SalesOrderID`
+- `SalesOrderDetailID`
+- `CarrierTrackingNumber`
+- `OrderQty`
+- `ProductID`
+- `SpecialOfferID`
+- `UnitPrice`
+- `UnitPriceDiscount`
+- `LineTotal`
+- `rowguid`
+- `ModifiedDate`
+
+### Example 3: Table `Production.ProductDocument`
+This table links products and their associated documents.
+
+**Columns:**
+- `ProductID`
+- `DocumentNode`
+- `ModifiedDate`
+
+### Example 4: Table `HumanResources.EmployeeDepartmentHistory`
+This table tracks employees’ department history over time.
+
+**Columns:**
+- `BusinessEntityID`
+- `DepartmentID`
+- `ShiftID`
+- `StartDate`
+- `EndDate`
+- `ModifiedDate`
+
+### Example 5: Table `Purchasing.PurchaseOrderDetail`
+This table tracks the details of purchase orders.
+
+**Columns:**
+- `PurchaseOrderID`
+- `PurchaseOrderDetailID`
+- `DueDate`
+- `OrderQty`
+- `ProductID`
+- `UnitPrice`
+- `LineTotal`
+- `ReceivedQty`
+- `RejectedQty`
+- `StockedQty`
+- `ModifiedDate`
+
+### Example 6: Table `Sales.Customer`
+This table stores information about customers.
+
+**Columns:**
+- `CustomerID`
+- `PersonID`
+- `StoreID`
+- `TerritoryID`
+- `AccountNumber`
+- `rowguid`
+- `ModifiedDate`
+
+These examples give you an idea of the column names and structure in AdventureWorks. Some column names are longer and descriptive, reflecting the purpose of the data they store. You can easily find the entire schema for AdventureWorks online, but this should give you a good starting point.
+
+If you need a full list, the Microsoft documentation or SQL Server queries would be the best resource.
+
+
 When naming SQL tables and columns, **clarity and readability** should be prioritized to make the database schema easy to understand and maintain. Here’s a breakdown of the options you provided:
 
 1. **`Iden` vs. `Identification`**:
