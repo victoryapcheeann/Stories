@@ -1,3 +1,151 @@
+To make the component reusable by allowing you to pass `files` and `setFiles` as props, you can modify the `DragAndDropUpload` component to accept these as parameters. This will allow you to manage the file state outside the component and reuse it wherever you need.
+
+### Updated Code to Accept `files` and `setFiles` as Props
+
+```tsx
+import React, { DragEvent, ChangeEvent, useRef } from 'react';
+
+interface DragAndDropUploadProps {
+  multiple?: boolean; // Optional prop to allow single or multiple file upload
+  files: File[]; // Array of files to manage externally
+  setFiles: React.Dispatch<React.SetStateAction<File[]>>; // State updater function for the files
+}
+
+const DragAndDropUpload: React.FC<DragAndDropUploadProps> = ({ multiple = true, files, setFiles }) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      if (multiple) {
+        setFiles((prevFiles) => [...prevFiles, ...Array.from(droppedFiles)]);
+      } else {
+        setFiles(Array.from(droppedFiles).slice(0, 1)); // Replace with single file
+      }
+      e.dataTransfer.clearData();
+    }
+  };
+
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles) return;
+
+    if (multiple) {
+      setFiles((prevFiles) => [...prevFiles, ...Array.from(selectedFiles)]);
+    } else {
+      setFiles(Array.from(selectedFiles).slice(0, 1)); // Replace with single file
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  };
+
+  const handleClick = () => {
+    if (inputRef.current) {
+      inputRef.current.click();
+    }
+  };
+
+  return (
+    <div>
+      <div
+        className="dropzone"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={handleClick}
+        style={{
+          border: '2px dashed #ccc',
+          padding: '20px',
+          textAlign: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <p>Drag and drop files here or click to upload</p>
+        <input
+          type="file"
+          onChange={handleFileSelect}
+          multiple={multiple} // Allow multiple or single file selection
+          ref={inputRef}
+          style={{ display: 'none' }}
+        />
+      </div>
+
+      {files.length > 0 && (
+        <div>
+          <h4>Files to upload:</h4>
+          <ul>
+            {files.map((file, index) => (
+              <li key={index}>
+                {file.name}
+                <button type="button" onClick={() => handleRemoveFile(index)}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DragAndDropUpload;
+```
+
+### Explanation:
+
+1. **Props `files` and `setFiles`**:
+   - `files`: This is the array of `File` objects that will be managed externally.
+   - `setFiles`: This is the state setter function to update the `files` array externally.
+
+2. **Removed Internal State**: 
+   - The component no longer manages its own state for the files, so `useState` is not needed inside the component.
+   - The state is fully managed outside the component, and `files` and `setFiles` are passed in as props.
+
+### Example Usage:
+
+In a parent component, you can manage the file state and pass it to `DragAndDropUpload`.
+
+```tsx
+import React, { useState } from 'react';
+import DragAndDropUpload from './DragAndDropUpload'; // Assuming DragAndDropUpload is in the same folder
+
+const ParentComponent: React.FC = () => {
+  const [files, setFiles] = useState<File[]>([]);
+
+  return (
+    <div>
+      <h1>File Upload</h1>
+      <DragAndDropUpload
+        multiple={true} // Set to false for single file
+        files={files}
+        setFiles={setFiles}
+      />
+      <button onClick={() => console.log(files)}>Submit Files</button>
+    </div>
+  );
+};
+
+export default ParentComponent;
+```
+
+### Key Features:
+1. **Single or Multiple File Upload**: Controlled by the `multiple` prop passed to `DragAndDropUpload`. If `multiple` is `false`, only one file is allowed at a time, and it replaces the previous file.
+   
+2. **File State Controlled in Parent**: The parent component manages the state (`files` and `setFiles`), making it easier to reuse the file upload logic in different parts of your application.
+
+Now, you can reuse the `DragAndDropUpload` component and control file uploads (whether single or multiple) from the parent component. Let me know if this works for your use case!
+
+
+
+
+
 Here’s how you can modify the `DragAndDropUpload` component to allow for either **single file** or **multiple file** uploads based on a prop parameter. If the upload is set to single file, the selected file will replace the previous one.
 
 ### Updated Code with Single or Multiple File Upload Option
