@@ -1,3 +1,35 @@
+When naming SQL tables and columns, **clarity and readability** should be prioritized to make the database schema easy to understand and maintain. Here’s a breakdown of the options you provided:
+
+1. **`Iden` vs. `Identification`**:
+   - **Better choice: `Identification`**
+     - **Reason**: The full form, `Identification`, is more descriptive and leaves no room for confusion. `Iden` could easily be misinterpreted or forgotten over time, especially by new developers or those unfamiliar with the project.
+
+2. **`Apprv` vs. `Approval`**:
+   - **Better choice: `Approval`**
+     - **Reason**: Again, `Approval` is clearer and more intuitive. While `Apprv` saves a few characters, the benefit of readability and reduced cognitive load outweighs the brevity. Developers will immediately understand the context when seeing `Approval`.
+
+3. **`Bus` vs. `Business`**:
+   - **Better choice: `Business`**
+     - **Reason**: `Business` is clearer and less ambiguous. `Bus` could be mistaken for a transportation reference, especially in a global team where context might differ. Using `Business` avoids any potential confusion.
+
+### **Why Full Names Are Better for SQL Table and Column Naming**:
+- **Readability**: Full names make it easier for developers to understand what the data represents without needing extra documentation or guessing.
+- **Consistency**: Using full, descriptive names promotes consistency, which is essential for collaboration and long-term maintenance.
+- **Onboarding**: New team members can quickly understand the database schema without having to decipher abbreviations.
+- **Avoid Ambiguity**: Abbreviations can be vague or have multiple meanings, leading to potential misunderstandings.
+
+---
+
+### **Guidelines for SQL Table and Column Naming**:
+1. **Be Descriptive**: Choose names that clearly describe the data. Avoid unnecessary abbreviations.
+2. **Consistency**: Stick to a consistent naming convention across the database (e.g., `CamelCase` or `snake_case`).
+3. **Avoid Ambiguations**: Avoid abbreviations unless they are universally understood (e.g., `ID` for `Identifier`).
+4. **Plural for Tables**: If your table stores multiple entities, consider using plural forms (e.g., `Customers` instead of `Customer`).
+
+By choosing full and clear names like `Identification`, `Approval`, and `Business`, you’ll create a more maintainable and developer-friendly database schema.
+
+
+
 Here’s an updated version of the code that includes the functionality to remove a file from the list of uploaded files.
 
 ### Full Code with File Deletion
