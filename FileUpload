@@ -1,3 +1,103 @@
+Here’s an updated version of the code that includes the functionality to remove a file from the list of uploaded files.
+
+### Full Code with File Deletion
+
+```tsx
+import React, { useState, DragEvent, ChangeEvent } from 'react';
+
+const DragAndDropUpload: React.FC = () => {
+  const [files, setFiles] = useState<File[]>([]); // State to store selected files
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      setFiles((prevFiles) => [...prevFiles, ...Array.from(droppedFiles)]);
+      e.dataTransfer.clearData();
+    }
+  };
+
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles) return;  // Early return if no files were selected
+
+    setFiles((prevFiles) => [...prevFiles, ...Array.from(selectedFiles)]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index)); // Remove file by index
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Handle the file upload logic here
+    console.log('Files uploaded:', files.map((file) => file.name));
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div
+        className="dropzone"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        style={{
+          border: '2px dashed #ccc',
+          padding: '20px',
+          textAlign: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <p>Drag and drop files here or click to upload</p>
+        <input
+          type="file"
+          onChange={handleFileSelect}
+          multiple
+          style={{ display: 'none' }}
+          id="fileInput"
+        />
+      </div>
+
+      {files.length > 0 && (
+        <div>
+          <h4>Files to upload:</h4>
+          <ul>
+            {files.map((file, index) => (
+              <li key={index}>
+                {file.name}
+                <button type="button" onClick={() => handleRemoveFile(index)}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <button type="submit">Upload Files</button>
+    </form>
+  );
+};
+
+export default DragAndDropUpload;
+```
+
+### Explanation:
+1. **`handleRemoveFile` Function**: This function removes a file from the list by filtering the files and excluding the file at the specified index.
+   
+2. **Rendering the List of Files**: Each file is displayed with a remove button next to it. When the user clicks "Remove," the `handleRemoveFile` function is triggered, which updates the state without the removed file.
+
+3. **Early Return in `handleFileSelect`**: In case no files are selected, we avoid any further processing by returning early.
+
+This approach allows the user to add files via drag-and-drop or by selecting files manually, as well as remove any file they no longer want to upload before submitting.
+
+Let me know if it works as expected or if you need further adjustments!
+
+
+
 Here’s the TypeScript version of **Example 2** that allows for multiple file uploads using drag-and-drop without any external libraries:
 
 ### Drag-and-Drop Multiple File Upload in TypeScript
