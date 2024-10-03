@@ -1,3 +1,111 @@
+Here’s the TypeScript version of **Example 2** that allows for multiple file uploads using drag-and-drop without any external libraries:
+
+### Drag-and-Drop Multiple File Upload in TypeScript
+
+```tsx
+import React, { useState, DragEvent, ChangeEvent } from 'react';
+
+const DragAndDropUpload: React.FC = () => {
+  const [files, setFiles] = useState<File[]>([]); // Multiple files
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      setFiles((prevFiles) => [...prevFiles, ...Array.from(droppedFiles)]);
+      e.dataTransfer.clearData();
+    }
+  };
+
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles((prevFiles) => [...prevFiles, ...Array.from(e.target.files)]);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Handle the file upload logic here
+    console.log('Files uploaded:', files.map((file) => file.name));
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div
+        className="dropzone"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        style={{
+          border: '2px dashed #ccc',
+          padding: '20px',
+          textAlign: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <p>Drag and drop files here or click to upload</p>
+        <input
+          type="file"
+          onChange={handleFileSelect}
+          multiple
+          style={{ display: 'none' }}
+          id="fileInput"
+        />
+      </div>
+      {files.length > 0 && (
+        <div>
+          <h4>Files to upload:</h4>
+          <ul>
+            {files.map((file, index) => (
+              <li key={index}>{file.name}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <button type="submit">Upload Files</button>
+    </form>
+  );
+};
+
+export default DragAndDropUpload;
+```
+
+### Key Points:
+1. **Multiple Files:** The `useState<File[]>` stores multiple files, and both drag-and-drop and file selection can handle multiple files at once.
+2. **File Input:** The `multiple` attribute on the `<input>` element allows selecting multiple files at once.
+3. **File List:** The selected files are displayed as a list so the user can see the files before uploading.
+4. **Array.from:** Converts the `FileList` object to an array of files to update the state correctly for multiple file handling.
+
+### CSS Styling (Optional):
+
+```css
+.dropzone {
+  width: 300px;
+  height: 200px;
+  border: 2px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+}
+```
+
+### How it Works:
+- **Drag-and-Drop:** When a user drags and drops files onto the dropzone, the `handleDrop` function adds the files to the state.
+- **File Selection:** Users can also use the file input element to select multiple files via the file dialog.
+- **Submit:** When the form is submitted, the files are logged, and you can implement the actual upload logic (e.g., sending files to a server).
+
+This example handles both drag-and-drop and manual file selection, with multiple file support in TypeScript.
+
+
+
+
+
+
 Here are some different examples of how you can handle file uploads in React, from basic to more advanced use cases. These examples include handling basic file inputs, drag-and-drop functionality, and using libraries like `react-dropzone`.
 
 ### Example 1: Basic File Upload with Input Element
