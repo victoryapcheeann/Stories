@@ -1,0 +1,313 @@
+I understand your preference for grouping each step's form fields under its own key in the state, such as `nameForm`, `jobForm`, etc. This approach can make your form state more organized and easier to manage, especially in complex multi-step forms.
+
+Formik supports nested structures in `initialValues` and `validationSchema`, allowing you to group your form fields logically. Here's how you can implement this:
+
+---
+
+### **1. Define Grouped Initial Values**
+
+Instead of flattening all form fields into a single object, group them under keys representing each step or form section.
+
+```jsx
+const initialValues = {
+  nameForm: {
+    firstName: '',
+    lastName: '',
+  },
+  jobForm: {
+    companyName: '',
+    position: '',
+  },
+  // ...other grouped forms
+};
+```
+
+---
+
+### **2. Create Validation Schemas for Each Group**
+
+For each step, define a Yup validation schema that matches the structure of the corresponding group in `initialValues`.
+
+```jsx
+const validationSchemas = [
+  // Validation schema for Step 1 (nameForm)
+  Yup.object({
+    nameForm: Yup.object({
+      firstName: Yup.string().required('First name is required'),
+      lastName: Yup.string().required('Last name is required'),
+    }),
+  }),
+  // Validation schema for Step 2 (jobForm)
+  Yup.object({
+    jobForm: Yup.object({
+      companyName: Yup.string().required('Company name is required'),
+      position: Yup.string().required('Position is required'),
+    }),
+  }),
+  // ...additional schemas for other steps
+];
+```
+
+---
+
+### **3. Access Nested Form Values in Components**
+
+In your form components (steps), use dot notation in the `name` attributes to bind to nested form fields. Formik handles nested values seamlessly.
+
+**Example: StepOne (nameForm)**
+
+```jsx
+import { useFormikContext } from 'formik';
+
+const StepOne = () => {
+  const { values, handleChange, errors, touched } = useFormikContext();
+
+  return (
+    <div>
+      <label>
+        First Name:
+        <input
+          name="nameForm.firstName"
+          value={values.nameForm.firstName}
+          onChange={handleChange}
+        />
+        {touched.nameForm?.firstName && errors.nameForm?.firstName && (
+          <div className="error">{errors.nameForm.firstName}</div>
+        )}
+      </label>
+      <label>
+        Last Name:
+        <input
+          name="nameForm.lastName"
+          value={values.nameForm.lastName}
+          onChange={handleChange}
+        />
+        {touched.nameForm?.lastName && errors.nameForm?.lastName && (
+          <div className="error">{errors.nameForm.lastName}</div>
+        )}
+      </label>
+    </div>
+  );
+};
+
+export default StepOne;
+```
+
+**Example: StepTwo (jobForm)**
+
+```jsx
+import { useFormikContext } from 'formik';
+
+const StepTwo = () => {
+  const { values, handleChange, errors, touched } = useFormikContext();
+
+  return (
+    <div>
+      <label>
+        Company Name:
+        <input
+          name="jobForm.companyName"
+          value={values.jobForm.companyName}
+          onChange={handleChange}
+        />
+        {touched.jobForm?.companyName && errors.jobForm?.companyName && (
+          <div className="error">{errors.jobForm.companyName}</div>
+        )}
+      </label>
+      <label>
+        Position:
+        <input
+          name="jobForm.position"
+          value={values.jobForm.position}
+          onChange={handleChange}
+        />
+        {touched.jobForm?.position && errors.jobForm?.position && (
+          <div className="error">{errors.jobForm.position}</div>
+        )}
+      </label>
+    </div>
+  );
+};
+
+export default StepTwo;
+```
+
+---
+
+### **4. Modify the Stepper Form to Handle Grouped State**
+
+Adjust your `StepperForm` component to work with the grouped `initialValues` and `validationSchemas`.
+
+```jsx
+import React, { useState, useEffect } from 'react';
+
+const StepperForm = ({ formik, steps, validationSchemas }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const goToNextStep = async () => {
+    const currentValidationSchema = validationSchemas[currentStep];
+    try {
+      await currentValidationSchema.validate(formik.values, { abortEarly: false });
+      setCurrentStep((prev) => prev + 1);
+      formik.setTouched({});
+      formik.setErrors({});
+    } catch (err) {
+      if (err.inner) {
+        const errors = err.inner.reduce((acc, error) => {
+          acc[error.path] = error.message;
+          return acc;
+        }, {});
+        formik.setErrors(errors);
+      }
+    }
+  };
+
+  const goToPreviousStep = () => {
+    setCurrentStep((prev) => prev - 1);
+  };
+
+  useEffect(() => {
+    formik.setValidationSchema(validationSchemas[currentStep]);
+  }, [currentStep, formik, validationSchemas]);
+
+  return (
+    <form onSubmit={formik.handleSubmit}>
+      {React.cloneElement(steps[currentStep], { formik })}
+      <div>
+        {currentStep > 0 && (
+          <button type="button" onClick={goToPreviousStep}>
+            Back
+          </button>
+        )}
+        {currentStep < steps.length - 1 && (
+          <button type="button" onClick={goToNextStep}>
+            Next
+          </button>
+        )}
+        {currentStep === steps.length - 1 && (
+          <button type="submit">Submit</button>
+        )}
+      </div>
+    </form>
+  );
+};
+
+export default StepperForm;
+```
+
+---
+
+### **5. Update Parent Component**
+
+In your parent component, pass the grouped `initialValues`, `validationSchemas`, and form steps to `StepperForm`.
+
+```jsx
+import React from 'react';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import StepperForm from './StepperForm';
+import StepOne from './StepOne';
+import StepTwo from './StepTwo';
+
+const ParentComponent = () => {
+  const initialValues = {
+    nameForm: {
+      firstName: '',
+      lastName: '',
+    },
+    jobForm: {
+      companyName: '',
+      position: '',
+    },
+    // ...other grouped forms
+  };
+
+  const validationSchemas = [
+    // ...validation schemas as defined earlier
+  ];
+
+  const handleSubmit = (values) => {
+    // Handle form submission
+    console.log('Form submitted with values:', values);
+  };
+
+  const formSteps = [<StepOne />, <StepTwo /> /* ...other steps */];
+
+  return (
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchemas[0]}
+      onSubmit={handleSubmit}
+    >
+      {(formik) => (
+        <StepperForm
+          formik={formik}
+          steps={formSteps}
+          validationSchemas={validationSchemas}
+        />
+      )}
+    </Formik>
+  );
+};
+
+export default ParentComponent;
+```
+
+---
+
+### **Benefits of Grouped State**
+
+- **Organized Structure:** Grouping fields makes the form state more manageable, especially when dealing with many fields.
+- **Clear Separation:** Each form component handles its own set of fields, reducing the chance of conflicts and making the code cleaner.
+- **Scalability:** Easier to scale and maintain as the form grows in complexity.
+
+---
+
+### **Additional Tips**
+
+- **Using `Field` and `ErrorMessage` Components:** Formik provides `Field` and `ErrorMessage` components to simplify form field creation and error handling.
+
+  ```jsx
+  import { Field, ErrorMessage } from 'formik';
+
+  const StepOne = () => {
+    return (
+      <div>
+        <label>
+          First Name:
+          <Field name="nameForm.firstName" />
+          <ErrorMessage name="nameForm.firstName" component="div" className="error" />
+        </label>
+        <label>
+          Last Name:
+          <Field name="nameForm.lastName" />
+          <ErrorMessage name="nameForm.lastName" component="div" className="error" />
+        </label>
+      </div>
+    );
+  };
+  ```
+
+- **Nested Errors and Touched Objects:** When accessing errors and touched fields, remember that they are nested objects. Use optional chaining or check for the existence of nested objects.
+
+- **Validation Paths:** Ensure that the paths in your validation schemas match the structure of your `initialValues`.
+
+---
+
+### **Conclusion**
+
+By grouping your form fields under keys like `nameForm`, `jobForm`, etc., you can keep your form state organized and aligned with the structure of your multi-step form. Formik's support for nested values and validation schemas makes it straightforward to manage grouped state.
+
+This approach:
+
+- **Aligns with Your Preferences:** Respects your desire to group each step's state separately.
+- **Keeps Components Modular:** Each step component handles its own fields, making the codebase easier to navigate and maintain.
+- **Simplifies State Management:** Grouped state can simplify updates and reduce the risk of inadvertently affecting other parts of the form.
+
+Feel free to adjust the grouping to fit your specific needs. If you have arrays or more complex nested structures, Formik and Yup can handle those as well.
+
+---
+
+### **Need Further Assistance?**
+
+If you have any questions or need help with specific aspects of this implementation, such as handling dynamic fields or integrating with APIs, please let me know. I'm here to help you create an efficient and user-friendly multi-step form with Formik.
