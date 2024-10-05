@@ -1,0 +1,21 @@
+Unclear Job Scope, Hierarchy, and the Importance of the Role
+With almost a decade of experience, my role within the team is critical in ensuring the technical quality and long-term sustainability of the project. However, it feels unbalanced that I am placed under a team lead with only about two years of experience. This creates ambiguity in terms of the hierarchy and how responsibilities should be distributed. Given the importance of my role in driving clean code practices and scalable solutions, the current structure doesn’t fully reflect the level of expertise needed to effectively guide the team.
+
+
+
+The Irony of Sustainable Development on a 6-Month Contract
+The focus in my role has been on writing robust, scalable, and clean code — which are all essential for the long-term success of the project. However, given that I am on a 6-month contract, there’s a certain irony to this emphasis. I’m the most senior developer on the team and have the best understanding of scalable coding practices, but the short-term nature of my contract creates little personal incentive to focus on sustainability, as I may not be around to see the long-term effects.
+
+Additionally, there is a lack of both carrot and stick. No one more senior would truly be able to tell whether I am doing things right or doing the right thing. In this environment, doing things the easy way might appear satisfactory in the short term, but it wouldn’t be the right approach for the project’s long-term health. This opens up the possibility for issues down the road that won’t be apparent in the immediate future.
+
+While I recognized this situation when I was hired, it’s important to highlight this so that management can address the potential for exploitation when hiring future contractors. The absence of positive incentives (carrot) or accountability (stick) leaves room for developers in my position to be taken advantage of, without motivation or recognition for maintaining high-quality work. This is especially concerning in a contract-based arrangement, where long-term project health might be compromised by short-term deliverable focus.
+
+
+
+High Standards and Unpopular, Yet Necessary, Contributions
+Despite these challenges, I continue to push for high standards. For example, I recently advocated for changes to the naming conventions in data modeling, fully aware that this was an unpopular recommendation due to the extra effort involved. However, I believe it’s better to be the “bad guy” for a day than to risk long-term issues with the project. I could have easily said, "yes, yes, very good," and gone along with the current approach, knowing that the real problems would only surface well beyond my 6-month contract. Instead, I took the initiative to create official documentation, outlining all the hidden implications if the changes were not made properly, covering debugging, development, and future onboarding. This highlights my commitment to ensuring the project’s sustainability and long-term success, even though I may not be there to see the full results.
+
+
+
+Workload and Realistic Expectations
+In addition to development, I am also enforcing clean coding practices, conducting code reviews, and even refactoring another project. While I hold myself to high standards, I am concerned about whether it’s realistic to accomplish everything required, given the workload and the short-term nature of my contract. Balancing these responsibilities has become a challenge, and without proper structure or support, it’s difficult to see how these high standards can be consistently maintained.
