@@ -1,3 +1,31 @@
+const form = useForm<FormValues>({
+  initialValues: {
+    form1: { firstName: '', lastName: '', fullName: '' },
+    form2: { email: '', phoneNumber: '' },
+    form3: { city: '', country: '' },
+  },
+
+  validate: {
+    form1: {
+      firstName: (value) => (value.length < 2 ? 'First name must have at least 2 characters' : null),
+      lastName: (value) => (value.length < 2 ? 'Last name must have at least 2 characters' : null),
+    },
+    form2: {
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      phoneNumber: (value) => (String(value).length < 10 ? 'Phone number must be at least 10 characters' : null),
+    },
+    form3: {
+      city: (value) => (value.length < 2 ? 'City must have at least 2 characters' : null),
+      country: (value) => (value.length < 2 ? 'Country must have at least 2 characters' : null),
+    },
+  },
+});
+
+
+
+
+
+
 import React, { useEffect } from 'react';
 import { useForm } from '@mantine/form';
 import { TextInput, Button, Group, NumberInput } from '@mantine/core';
