@@ -1,0 +1,117 @@
+import React, { useEffect } from 'react';
+import { useForm } from '@mantine/form';
+import { TextInput, Button, Group, NumberInput } from '@mantine/core';
+
+// Define the type for form values
+interface FormValues {
+  form1: {
+    firstName: string;
+    lastName: string;
+    fullName: string;
+  };
+  form2: {
+    email: string;
+    phoneNumber: string | number;
+  };
+  form3: {
+    city: string;
+    country: string;
+  };
+}
+
+// Sub-Form 1: Personal Info
+const SubForm1 = ({ form }: { form: ReturnType<typeof useForm<FormValues>> }) => (
+  <div>
+    <TextInput
+      label="First Name"
+      placeholder="Enter your first name"
+      {...form.getInputProps('form1.firstName')}
+    />
+    <TextInput
+      label="Last Name"
+      placeholder="Enter your last name"
+      {...form.getInputProps('form1.lastName')}
+    />
+    <TextInput
+      label="Full Name (Derived)"
+      placeholder="Full name will be generated"
+      readOnly
+      {...form.getInputProps('form1.fullName')}
+    />
+  </div>
+);
+
+// Sub-Form 2: Contact Info
+const SubForm2 = ({ form }: { form: ReturnType<typeof useForm<FormValues>> }) => (
+  <div>
+    <TextInput
+      label="Email"
+      placeholder="Enter your email"
+      {...form.getInputProps('form2.email')}
+    />
+    <NumberInput
+      label="Phone Number"
+      placeholder="Enter your phone number"
+      {...form.getInputProps('form2.phoneNumber')}
+    />
+  </div>
+);
+
+// Sub-Form 3: Address Info
+const SubForm3 = ({ form }: { form: ReturnType<typeof useForm<FormValues>> }) => (
+  <div>
+    <TextInput
+      label="City"
+      placeholder="Enter your city"
+      {...form.getInputProps('form3.city')}
+    />
+    <TextInput
+      label="Country"
+      placeholder="Enter your country"
+      {...form.getInputProps('form3.country')}
+    />
+  </div>
+);
+
+// Parent Form
+const ParentForm: React.FC = () => {
+  const form = useForm<FormValues>({
+    initialValues: {
+      form1: { firstName: '', lastName: '', fullName: '' },
+      form2: { email: '', phoneNumber: '' },
+      form3: { city: '', country: '' },
+    },
+
+    validate: {
+      'form1.firstName': (value) => (value.length < 2 ? 'First name must have at least 2 characters' : null),
+      'form1.lastName': (value) => (value.length < 2 ? 'Last name must have at least 2 characters' : null),
+      'form2.email': (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      'form2.phoneNumber': (value) => (String(value).length < 10 ? 'Phone number must be at least 10 characters' : null),
+      'form3.city': (value) => (value.length < 2 ? 'City must have at least 2 characters' : null),
+      'form3.country': (value) => (value.length < 2 ? 'Country must have at least 2 characters' : null),
+    },
+  });
+
+  useEffect(() => {
+    const fullName = `${form.values.form1.firstName} ${form.values.form1.lastName}`.trim();
+    form.setFieldValue('form1.fullName', fullName);
+  }, [form.values.form1.firstName, form.values.form1.lastName]);
+
+  const handleSubmit = (values: FormValues) => {
+    console.log('Form Submitted:', values);
+  };
+
+  return (
+    <form onSubmit={form.onSubmit(handleSubmit)}>
+      <SubForm1 form={form} />
+      <SubForm2 form={form} />
+      <SubForm3 form={form} />
+
+      <Group position="right" mt="md">
+        <Button type="submit">Submit</Button>
+      </Group>
+    </form>
+  );
+};
+
+export default ParentForm;
