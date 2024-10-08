@@ -1,3 +1,222 @@
+
+I'm sorry to hear that the previous solution isn't working for you. Let's work through this issue together to find a solution.
+
+## Possible Reasons It's Not Working
+
+1. **Incorrect Usage of Validators**: The way the validators are applied might not align with Mantine's current API.
+2. **Version Mismatch**: You might be using a different version of Mantine where the API has changed.
+3. **Import Issues**: The built-in validators may not be imported correctly.
+4. **Syntax Errors**: There might be subtle syntax issues causing the problem.
+
+## Updated Solution
+
+Based on the latest Mantine documentation, here's how you can correctly apply multiple built-in validators to a form field:
+
+```jsx
+import { useForm, isNotEmpty, hasLength } from '@mantine/form';
+
+const form = useForm({
+  initialValues: {
+    username: '',
+  },
+
+  validate: {
+    username: (value) => {
+      // Apply the 'isNotEmpty' validator
+      const notEmptyError = isNotEmpty('Username is required')(value);
+      if (notEmptyError) {
+        return notEmptyError;
+      }
+
+      // Apply the 'hasLength' validator
+      const lengthError = hasLength(
+        { min: 4, max: 16 },
+        'Username must be between 4 and 16 characters long'
+      )(value);
+      if (lengthError) {
+        return lengthError;
+      }
+
+      return null; // No errors
+    },
+  },
+});
+```
+
+### Explanation
+
+- **Import Validators Correctly**: Ensure you're importing the validators from `@mantine/form`.
+- **Applying Validators**: Each built-in validator is a function that returns another function. You need to invoke it with your parameters (like error messages or length constraints) to get the actual validator function.
+- **Sequential Validation**: In the validation function for `username`, apply each validator sequentially. If a validator returns an error, return that error immediately.
+- **Return Null if No Errors**: If all validators pass, return `null` to indicate that there are no validation errors.
+
+## Simplifying with a Helper Function
+
+To make your code cleaner, you can create a `composeValidators` helper function:
+
+```jsx
+const composeValidators = (...validators) => (value) => {
+  for (const validator of validators) {
+    const error = validator(value);
+    if (error) return error; // Return the first error encountered
+  }
+  return null; // No errors
+};
+```
+
+Then use it in your form:
+
+```jsx
+const form = useForm({
+  initialValues: {
+    username: '',
+  },
+
+  validate: {
+    username: composeValidators(
+      isNotEmpty('Username is required'),
+      hasLength({ min: 4, max: 16 }, 'Username must be between 4 and 16 characters long')
+    ),
+  },
+});
+```
+
+## Ensure Correct Imports
+
+Make sure you're importing everything correctly:
+
+```jsx
+import { useForm, isNotEmpty, hasLength } from '@mantine/form';
+```
+
+## Check Your Mantine Version
+
+It's important to verify that you're using a version of Mantine that supports these built-in validators. As of Mantine **v3.0**, the built-in validators are available.
+
+You can check your Mantine version by running:
+
+```bash
+npm list @mantine/form
+```
+
+If you're using an older version, you can update Mantine:
+
+```bash
+npm install @mantine/core @mantine/form
+```
+
+## Complete Example
+
+Here's a full example that you can test in your application:
+
+```jsx
+import React from 'react';
+import { useForm, isNotEmpty, hasLength } from '@mantine/form';
+import { TextInput, Button } from '@mantine/core';
+
+function RegistrationForm() {
+  const form = useForm({
+    initialValues: {
+      username: '',
+    },
+
+    validate: {
+      username: composeValidators(
+        isNotEmpty('Username is required'),
+        hasLength(
+          { min: 4, max: 16 },
+          'Username must be between 4 and 16 characters long'
+        )
+      ),
+    },
+  });
+
+  const handleSubmit = (values) => {
+    console.log('Form submitted:', values);
+  };
+
+  return (
+    <form onSubmit={form.onSubmit(handleSubmit)}>
+      <TextInput
+        label="Username"
+        placeholder="Enter your username"
+        {...form.getInputProps('username')}
+        error={form.errors.username}
+      />
+
+      <Button type="submit" mt="sm">
+        Register
+      </Button>
+    </form>
+  );
+}
+
+export default RegistrationForm;
+```
+
+## Troubleshooting Steps
+
+1. **Verify Imports**: Ensure all imports are correct and from `@mantine/form` and `@mantine/core`.
+2. **Check Validator Usage**: Remember that validators like `isNotEmpty` and `hasLength` are higher-order functions—they return a validator function when called with parameters.
+3. **Test Individually**: Try applying one validator at a time to see if they work individually.
+
+   ```jsx
+   validate: {
+     username: isNotEmpty('Username is required'),
+   }
+   ```
+
+   Then add the second validator:
+
+   ```jsx
+   validate: {
+     username: hasLength({ min: 4 }, 'Username must be at least 4 characters long'),
+   }
+   ```
+
+   Finally, combine them as shown earlier.
+
+4. **Console Errors**: Check your browser's console for any error messages that can give clues.
+5. **Mantine Documentation**: Refer to the [Mantine Form Documentation](https://mantine.dev/form/use-form/) for the most up-to-date information.
+
+## Common Pitfalls
+
+- **Not Invoking Validators Correctly**: Remember to call the validator functions with their parameters to get the actual validation function.
+  
+  ```jsx
+  // Incorrect
+  validate: {
+    username: isNotEmpty,
+  }
+
+  // Correct
+  validate: {
+    username: isNotEmpty('Username is required'),
+  }
+  ```
+
+- **Missing Return Statements**: Ensure that your validation functions return the error message when validation fails and `null` when it passes.
+
+## If the Issue Persists
+
+If you're still experiencing problems, please provide the following:
+
+- **Error Messages**: Any error messages you're seeing in the console or terminal.
+- **Code Snippets**: The relevant parts of your code where you're setting up the form and validators.
+- **Mantine Version**: The exact version of Mantine you're using.
+
+With this information, I can offer more specific guidance to resolve the issue.
+
+## Conclusion
+
+Using Mantine's built-in validators requires careful attention to how they are invoked and applied. By ensuring that you're using the correct syntax and methods, you should be able to perform multiple validations on your form fields effectively.
+
+Feel free to share any additional details or questions you have, and I'll be happy to assist further!
+
+
+
+
+
 const form = useForm<FormValues>({
   initialValues: {
     form1: { firstName: '', lastName: '', fullName: '' },
