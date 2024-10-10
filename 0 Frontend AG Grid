@@ -1,3 +1,49 @@
+import React, { useState } from 'react';
+import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
+import * as XLSX from 'xlsx';
+
+const ExcelToJsonConverter = () => {
+  const [jsonData, setJsonData] = useState(null);
+
+  const handleFileUpload = (files) => {
+    const file = files[0];
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+
+      // Assuming you want to convert the first sheet to JSON
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(worksheet);
+
+      setJsonData(json);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  return (
+    <div>
+      <Dropzone
+        onDrop={handleFileUpload}
+        accept={[MIME_TYPES.xlsx, MIME_TYPES.xls]}
+        multiple={false}
+      >
+        {(status) => <p>Drag and drop your Excel file here, or click to select</p>}
+      </Dropzone>
+
+      {jsonData && (
+        <pre>{JSON.stringify(jsonData, null, 2)}</pre>
+      )}
+    </div>
+  );
+};
+
+export default ExcelToJsonConverter;
+
+
+
 import React, { useState, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
