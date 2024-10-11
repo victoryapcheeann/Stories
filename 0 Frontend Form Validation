@@ -1,0 +1,63 @@
+import { useForm } from '@mantine/form';
+
+// Reusable validation functions
+function checkFieldExists(value) {
+    if (!value) {
+        return "Field is required.";
+    }
+    return null;
+}
+
+function checkCharacterCount(value, minLength = 1, maxLength = 100) {
+    if (value.length < minLength) {
+        return `Minimum length is ${minLength} characters.`;
+    }
+    if (value.length > maxLength) {
+        return `Maximum length is ${maxLength} characters.`;
+    }
+    return null;
+}
+
+function checkSpecialCharacters(value) {
+    const specialCharPattern = /[!@#$%^&*(),.?":{}|<>]/;
+    if (!specialCharPattern.test(value)) {
+        return "The value must contain at least one special character.";
+    }
+    return null;
+}
+
+// Example Mantine useForm with modular validation
+const form = useForm({
+    mode: 'uncontrolled',
+    initialValues: { 
+        name: '', 
+        email: '', 
+        age: 0,
+        password: '' // Adding an extra field for demonstration
+    },
+
+    // Combine modular validators for each field
+    validate: {
+        name: (value) => {
+            // Combine multiple checks for 'name'
+            return checkFieldExists(value) || checkCharacterCount(value, 2);
+        },
+        email: (value) => {
+            // Use built-in pattern validation for email
+            return /^\S+@\S+$/.test(value) ? null : 'Invalid email';
+        },
+        age: (value) => {
+            // Check minimum age requirement
+            return value < 18 ? 'You must be at least 18 to register' : null;
+        },
+        password: (value) => {
+            // Example combining multiple validators
+            return checkFieldExists(value) || checkCharacterCount(value, 8) || checkSpecialCharacters(value);
+        }
+    },
+});
+
+// Usage
+form.onSubmit((values) => {
+    console.log('Form submitted:', values);
+});
