@@ -1,3 +1,88 @@
+If you have a function called `validateRequiredField`, here's an example of how it could be applied either row-by-row or column-by-column.
+
+### **1. Row-by-Row Example**
+In this case, the function checks each object in a list and validates its fields individually:
+
+```javascript
+function validateRequiredField(obj) {
+  const requiredFields = ['name', 'email', 'age'];
+  const errors = [];
+
+  requiredFields.forEach((field) => {
+    if (!obj[field]) {
+      errors.push(`Field ${field} is required`);
+    }
+  });
+
+  return errors.length > 0 ? errors : null;
+}
+
+const data = [
+  { name: 'John', email: 'john@example.com', age: 25 },
+  { name: '', email: 'jane@example.com', age: 30 }, // Missing name
+  { name: 'Steve', email: '', age: 0 },             // Missing email
+];
+
+data.forEach((row, index) => {
+  const errors = validateRequiredField(row);
+  if (errors) {
+    console.log(`Row ${index + 1} validation errors:`, errors);
+  }
+});
+```
+
+- **How it works**: The function is applied to each object (row) individually, checking if the required fields are present.
+- **Best for**: When you need to validate fields within each object and possibly cross-field dependencies.
+
+### **2. Column-by-Column Example**
+Here, the validation is done for each field (column) across all objects in the list:
+
+```javascript
+function validateRequiredFieldForColumn(data, columnName) {
+  const errors = [];
+
+  data.forEach((obj, index) => {
+    if (!obj[columnName]) {
+      errors.push(`Row ${index + 1}: Field ${columnName} is required`);
+    }
+  });
+
+  return errors.length > 0 ? errors : null;
+}
+
+const data = [
+  { name: 'John', email: 'john@example.com', age: 25 },
+  { name: '', email: 'jane@example.com', age: 30 }, // Missing name
+  { name: 'Steve', email: '', age: 0 },             // Missing email
+];
+
+// Validate each column (field) independently
+const columns = ['name', 'email', 'age'];
+
+columns.forEach((column) => {
+  const errors = validateRequiredFieldForColumn(data, column);
+  if (errors) {
+    console.log(`Validation errors for ${column}:`, errors);
+  }
+});
+```
+
+- **How it works**: The function checks all objects (rows) for a specific field (column) one at a time.
+- **Best for**: When validating fields independently across all rows, making it easier to apply optimizations for large datasets.
+
+### **Conclusion**
+- **Row-by-row** validation is suitable when fields are interconnected or when each object needs to be validated independently.
+- **Column-by-column** validation can be more efficient when the validation for a particular field is the same across all rows.
+
+If your `validateRequiredField` function checks for mandatory fields without field interdependencies, the column-by-column approach could offer better performance, especially for large datasets.
+
+
+
+
+
+
+
+
 // Reusable validation functions
 function checkFieldExists(field, value) {
     if (!value) {
