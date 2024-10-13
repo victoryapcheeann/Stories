@@ -1,3 +1,65 @@
+// Function to validate a list of objects and return grouped results using the `id` field
+function validateListOfObjects(dataList: any[]) {
+    const validationResult: any = {};
+
+    dataList.forEach((row) => {
+        const id = row.id; // Use the `id` field from the row object
+
+        // Validate each field and collect errors
+        Object.keys(validationMap).forEach((field) => {
+            const error = validateField(field, row[field]);
+
+            if (error) {
+                if (!validationResult[field]) {
+                    validationResult[field] = {};
+                }
+
+                if (!validationResult[field][error]) {
+                    validationResult[field][error] = [];
+                }
+
+                validationResult[field][error].push(id); // Add the `id` of the object where the error occurred
+            }
+        });
+    });
+
+    return validationResult;
+}
+
+// Validate the list of objects
+const result = validateListOfObjects(dataList);
+console.log(result);
+
+ <div>
+      {/* Dynamically get fields from the validation result */}
+      {Object.keys(validationResult).map((field) => (
+        <div key={field}>
+          <strong>{field.charAt(0).toUpperCase() + field.slice(1)}:</strong>
+          {/* Check if the field exists in the validation result and if it's an empty object */}
+          {isEmptyObject(validationResult[field]) ? (
+            // No errors, render a green tick
+            <span style={{ color: 'green' }}>✔ No errors</span>
+          ) : (
+            <ul>
+              {/* Render all the error messages for the field */}
+              {Object.keys(validationResult[field]).map((error, index) => (
+                <li key={index}>
+                  {error} (ID: {validationResult[field][error].join(', ')})
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
+
+
+
+
+
+
+
+
 /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
 
 
