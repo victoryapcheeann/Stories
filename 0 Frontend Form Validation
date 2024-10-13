@@ -1,3 +1,6 @@
+/[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+
+
 If you have a function called `validateRequiredField`, here's an example of how it could be applied either row-by-row or column-by-column.
 
 ### **1. Row-by-Row Example**
