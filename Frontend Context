@@ -1,0 +1,98 @@
+To share state and the ability to update that state (`setState`) between two different pages in React when using `router.push`, you can approach it in a few different ways:
+
+### 1. **Using Context API**
+The **Context API** allows you to share state across different components and pages without having to pass props through every level. Here’s how you can do it:
+
+#### Step 1: Create a context
+
+```jsx
+import React, { createContext, useState } from 'react';
+
+// Create the context
+export const MyContext = createContext();
+
+export const MyProvider = ({ children }) => {
+  const [sharedState, setSharedState] = useState('Initial state');
+
+  return (
+    <MyContext.Provider value={{ sharedState, setSharedState }}>
+      {children}
+    </MyContext.Provider>
+  );
+};
+```
+
+#### Step 2: Wrap your app in the context provider
+
+You need to wrap your entire application or at least the part that requires access to the shared state with the `MyProvider`.
+
+```jsx
+import { MyProvider } from './path_to_provider';
+
+function App() {
+  return (
+    <MyProvider>
+      {/* Your router or page components here */}
+    </MyProvider>
+  );
+}
+
+export default App;
+```
+
+#### Step 3: Access shared state and setState in pages
+
+In any component or page, you can now use the shared state and `setState` via the `useContext` hook.
+
+```jsx
+import React, { useContext } from 'react';
+import { MyContext } from './path_to_provider';
+
+const PageOne = () => {
+  const { sharedState, setSharedState } = useContext(MyContext);
+
+  return (
+    <div>
+      <p>Shared State: {sharedState}</p>
+      <button onClick={() => setSharedState('Updated state from Page One')}>
+        Update State
+      </button>
+    </div>
+  );
+};
+
+export default PageOne;
+```
+
+You can do the same on the second page to access or update the state.
+
+### 2. **Passing State through Router**
+If you want to pass the state through `router.push` directly, you can pass the state as part of the query or route params, but this won’t let you pass the `setState` function. This is not ideal for `setState`, but here’s how you can pass the current state:
+
+```jsx
+router.push({
+  pathname: '/nextPage',
+  query: { stateValue: sharedState }
+});
+```
+
+And then, in the next page, you can access it using `useRouter`:
+
+```jsx
+import { useRouter } from 'next/router';
+
+const NextPage = () => {
+  const router = useRouter();
+  const { stateValue } = router.query;
+
+  return <div>Received state: {stateValue}</div>;
+};
+```
+
+However, this method is more suitable for state that you don't need to modify frequently.
+
+### 3. **Using Global State Libraries**
+If your app scales and you need more complex state management, libraries like **Redux**, **Recoil**, or **Zustand** can help manage shared state more effectively.
+
+### Final Recommendation
+For most cases in React, especially if you're not using complex state management, **Context API** is the cleanest and most React-friendly way to share state between pages, especially for small to medium-sized applications.
