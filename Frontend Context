@@ -1,3 +1,137 @@
+Here’s how you can implement **state sharing** using **Context API** in a TypeScript-based React app.
+
+### 1. **Create the context with TypeScript**
+
+First, define the types for your shared state and context.
+
+```tsx
+import React, { createContext, useState, ReactNode } from 'react';
+
+// Define the types for the shared state and the set function
+interface MyContextType {
+  sharedState: string;
+  setSharedState: React.Dispatch<React.SetStateAction<string>>;
+}
+
+// Create a default context with empty functions to avoid undefined errors
+export const MyContext = createContext<MyContextType>({
+  sharedState: '',
+  setSharedState: () => {}
+});
+
+// Create a provider component
+interface MyProviderProps {
+  children: ReactNode;
+}
+
+export const MyProvider: React.FC<MyProviderProps> = ({ children }) => {
+  const [sharedState, setSharedState] = useState<string>('Initial state');
+
+  return (
+    <MyContext.Provider value={{ sharedState, setSharedState }}>
+      {children}
+    </MyContext.Provider>
+  );
+};
+```
+
+### 2. **Wrap your app in the context provider**
+
+Make sure you wrap the part of the app (or the entire app) where you need access to the shared state with `MyProvider`.
+
+```tsx
+import { MyProvider } from './path_to_provider';
+import React from 'react';
+
+const App: React.FC = () => {
+  return (
+    <MyProvider>
+      {/* Your Router or Pages here */}
+    </MyProvider>
+  );
+}
+
+export default App;
+```
+
+### 3. **Access the shared state and setState in different pages**
+
+You can now access the shared state and `setState` in any component using `useContext`.
+
+#### PageOne.tsx
+```tsx
+import React, { useContext } from 'react';
+import { MyContext } from './path_to_provider';
+
+const PageOne: React.FC = () => {
+  const { sharedState, setSharedState } = useContext(MyContext);
+
+  return (
+    <div>
+      <p>Shared State: {sharedState}</p>
+      <button onClick={() => setSharedState('Updated state from Page One')}>
+        Update State
+      </button>
+    </div>
+  );
+};
+
+export default PageOne;
+```
+
+#### PageTwo.tsx
+```tsx
+import React, { useContext } from 'react';
+import { MyContext } from './path_to_provider';
+
+const PageTwo: React.FC = () => {
+  const { sharedState } = useContext(MyContext);
+
+  return (
+    <div>
+      <p>Shared State on Page Two: {sharedState}</p>
+    </div>
+  );
+};
+
+export default PageTwo;
+```
+
+### 4. **Using Router Navigation (Optional)**
+
+If you are using Next.js or any other router, you can navigate between pages while maintaining the shared state through the context.
+
+```tsx
+import { useRouter } from 'next/router';
+import React, { useContext } from 'react';
+import { MyContext } from './path_to_provider';
+
+const PageOne: React.FC = () => {
+  const { sharedState, setSharedState } = useContext(MyContext);
+  const router = useRouter();
+
+  const goToPageTwo = () => {
+    setSharedState('Updated state from Page One');
+    router.push('/pageTwo'); // Use your routing method
+  };
+
+  return (
+    <div>
+      <p>Shared State: {sharedState}</p>
+      <button onClick={goToPageTwo}>Go to Page Two</button>
+    </div>
+  );
+};
+
+export default PageOne;
+```
+
+With this approach, you can share the state and the `setState` function across multiple pages without prop-drilling, ensuring cleaner and more maintainable code. The TypeScript typings also ensure you get full type safety across your app.
+
+
+
+
+
 To share state and the ability to update that state (`setState`) between two different pages in React when using `router.push`, you can approach it in a few different ways:
 
 ### 1. **Using Context API**
