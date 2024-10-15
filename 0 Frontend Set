@@ -1,0 +1,107 @@
+Sure! Here’s the full implementation where we collect the statuses of the selected rows into a `Set` and check button conditions based on the unique statuses. This avoids the need to iterate multiple times over the rows and ensures efficient handling of button state.
+
+### Full React Code with Optimized `Set` Logic:
+
+```jsx
+import React, { useState, useEffect, useCallback } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS
+import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
+
+const GridComponent = () => {
+  const [rowData] = useState([
+    { status: 'draft', name: 'Task 1' },
+    { status: 'reviewed', name: 'Task 2' },
+    { status: 'proposed', name: 'Task 3' }
+  ]);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [buttonState, setButtonState] = useState({
+    allDraft: false,
+    allReviewed: false,
+    canPropose: false,
+  });
+
+  const columnDefs = [
+    { headerName: "Status", field: "status", checkboxSelection: true },
+    { headerName: "Name", field: "name" }
+  ];
+
+  // Function to handle row selection and update button states
+  const onSelectionChanged = useCallback(() => {
+    const selected = gridApi.getSelectedRows();
+    setSelectedRows(selected);
+  }, []);
+
+  // Update button state based on the status of selected rows
+  useEffect(() => {
+    const updateButtonState = () => {
+      // Collect unique statuses from the selected rows
+      const statusSet = new Set(selectedRows.map(row => row.status));
+
+      // Determine the button states based on the unique statuses
+      const allDraft = statusSet.size === 1 && statusSet.has('draft');
+      const allReviewed = statusSet.size === 1 && statusSet.has('reviewed');
+      const canPropose = statusSet.has('draft') || statusSet.has('proposed');
+
+      // Update the button states
+      setButtonState({
+        allDraft,
+        allReviewed,
+        canPropose
+      });
+    };
+
+    updateButtonState();
+  }, [selectedRows]);
+
+  let gridApi;
+
+  const onGridReady = params => {
+    gridApi = params.api;
+  };
+
+  return (
+    <div>
+      {/* AG Grid */}
+      <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+        <AgGridReact
+          rowData={rowData}
+          columnDefs={columnDefs}
+          rowSelection="multiple"
+          onGridReady={onGridReady}
+          onSelectionChanged={onSelectionChanged}
+        />
+      </div>
+
+      {/* Buttons */}
+      <div style={{ marginTop: 20 }}>
+        <button disabled={!buttonState.allDraft}>Draft Button</button>
+        <button disabled={!buttonState.allReviewed}>Reviewed Button</button>
+        <button disabled={!buttonState.canPropose}>Propose Button</button>
+      </div>
+    </div>
+  );
+};
+
+export default GridComponent;
+```
+
+### Explanation of Changes:
+
+1. **Collect Unique Statuses in a `Set`:**
+   - `const statusSet = new Set(selectedRows.map(row => row.status));` collects all the unique statuses from the selected rows. This ensures that no repeated statuses are considered.
+
+2. **Button State Logic:**
+   - **All Draft:** `allDraft` is `true` if all selected rows have the status `draft`, which is determined by checking that the `Set` has exactly one entry (`size === 1`) and that entry is `draft`.
+   - **All Reviewed:** Similarly, `allReviewed` is `true` if the `Set` contains only `reviewed`.
+   - **Can Propose:** `canPropose` is `true` if the `Set` contains either `draft` or `proposed`.
+
+3. **Button Updates:**
+   - The buttons are enabled or disabled based on the `buttonState`, which is updated whenever the selected rows change.
+
+### Benefits of This Approach:
+- **Single Iteration:** The `Set` ensures that we only iterate over the selected rows once, collecting unique statuses, making the logic more efficient.
+- **Constant Time Lookup:** Checking membership in a `Set` is done in constant time (`O(1)`), which is faster than multiple `if` conditions or repeated iterations.
+- **Scalability:** This approach will handle a larger number of rows and statuses efficiently.
+
+This full implementation ensures that your buttons are dynamically enabled or disabled based on the selected row statuses using the most efficient approach with `Set`.
