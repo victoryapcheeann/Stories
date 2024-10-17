@@ -1,0 +1,29 @@
+1. Consistency in User Experience
+Reason: Users are already familiar with the inline editing functionality in AG Grid for bulk updates. Maintaining the same process for single-row updates keeps the experience uniform and reduces the need to switch contexts.
+Justification: Jumping to a separate form for single-row edits disrupts the user's flow and requires them to adapt to a different interface, potentially slowing down their work and introducing confusion.
+Example: If a user is editing several rows, it's more efficient to stay in AG Grid for single-row updates rather than navigating to a form for one-off edits.
+2. Faster Editing Process
+Reason: Inline editing in AG Grid allows for quicker changes without navigating away from the grid view, making the process faster for the user.
+Justification: If the user can directly edit the row within the grid, it reduces the steps involved in opening a separate form, entering the data, and saving it.
+Example: If a user is only updating one field in a row (e.g., a status change or minor correction), doing this directly in the grid is much quicker than opening a form.
+3. Avoid Extra Development Complexity
+Reason: Moving single-row updates to a separate form (like a stepper) means developers must handle passing data, setting defaults, and keeping the form synchronized with AG Grid, increasing complexity.
+Justification: By keeping everything in AG Grid, there’s no need for additional handling of form states, which simplifies both the codebase and maintenance.
+Example: Developers avoid the need to write extra logic to populate the form, validate fields in two different places (grid vs. form), and manage data syncing between the form and AG Grid.
+4. Real-Time Data Visibility
+Reason: In AG Grid, users can see the surrounding rows and data while making edits, providing useful context.
+Justification: When updating a single row, users might benefit from seeing the adjacent rows to cross-check values, ensuring consistency across multiple records.
+Example: A user can easily compare the row they are editing with neighboring rows without needing to navigate away from the grid.
+5. Better for Simpler Edits
+Reason: Many single-row updates may be simple (e.g., updating one or two fields) and do not require a full multi-step form.
+Justification: Opening a separate form for these simple edits is overkill and adds unnecessary steps, while AG Grid’s inline editing allows users to make quick adjustments efficiently.
+Example: Changing a single field like a user status or a stock count can be done in seconds directly in AG Grid, rather than navigating through multiple steps in a form.
+6. Reduced Cognitive Load
+Reason: Switching to a form (especially a multi-step one) can introduce cognitive overhead as users have to navigate through steps that may not be necessary for a quick update.
+Justification: Keeping everything in AG Grid for single-row updates reduces this complexity, allowing users to focus directly on the data they are editing without unnecessary distractions or extra steps.
+Example: A user can directly focus on editing the field that needs updating instead of mentally shifting to a separate workflow in a form.
+7. Maintains Bulk Editing Capabilities
+Reason: AG Grid is designed for managing tabular data efficiently, including both bulk and single-row updates. Keeping everything in the grid allows users to edit multiple rows or switch from single to bulk updates seamlessly.
+Justification: Having two different editing methods (inline for bulk updates and a separate form for single-row updates) might create confusion or unnecessary workflow disruption.
+Example: If a user realizes that multiple rows need similar changes after starting a single-row update, they can easily expand their selection and perform bulk updates without having to leave the grid.
+By keeping single-row updates within AG Grid, you streamline the process for both users and developers, reduce context switching, and ensure that simple updates remain fast and intuitive.
