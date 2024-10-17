@@ -1,0 +1,22 @@
+// Define a mapping of field names to validation functions
+const customConditions = () => {
+  return {
+    "Process ID": (field, row) => validateFieldFormDropdown(field, row[field], processIDList),
+    "Consumer Application CMDB Name": (field, row) => validateFieldFormDropdown(field, row[field], applicationNameList),
+    "Sub Process": (field, row) => validateSubFieldFormDropdown(field, row[field], processIDData),
+    "Consumer Application CMDB Instance Name": (field, row) => validateSubFieldFormDropdown(field, row[field], applicationNameInstanceList),
+  };
+};
+
+// Perform the validation by checking if the field has a corresponding validation function
+const validationFunctions = customConditions();
+
+if (columnWithCustomConditions.includes(field)) {
+  // Check if there's a custom validation function for the current field
+  if (validationFunctions[field]) {
+    errorMessage = validationFunctions[field](field, row);  // Call the appropriate function
+  }
+} else {
+  // Default validation
+  errorMessage = validateFieldForm(field, row[field]);
+}
