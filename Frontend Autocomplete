@@ -1,3 +1,115 @@
+Yes, you can use **Mantine's Autocomplete** component as a custom cell editor in AG Grid instead of manually implementing one from scratch. Mantine's Autocomplete allows both selecting from predefined options and typing free text, which fits your use case perfectly.
+
+Here’s how to integrate Mantine's `Autocomplete` component as a custom cell editor in AG Grid.
+
+### 1. **Install Mantine**
+
+If you haven’t installed Mantine yet, you can do so with:
+
+```bash
+npm install @mantine/core @mantine/hooks
+```
+
+### 2. **Create the Custom Cell Editor Using Mantine Autocomplete**
+
+The following is an example of using Mantine's `Autocomplete` as a custom editor in AG Grid:
+
+```tsx
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import { Autocomplete } from '@mantine/core';
+
+const MantineAutocompleteEditor = forwardRef((props, ref) => {
+  const [value, setValue] = useState(props.value || '');  // Initialize with the current value
+  const options = props.options || [];  // Options for the autocomplete
+
+  // Expose methods that AG Grid calls on the cell editor
+  useImperativeHandle(ref, () => ({
+    // Called by AG Grid to get the value after editing
+    getValue() {
+      return value;
+    },
+    // Focus on the input field when editing starts
+    afterGuiAttached() {
+      // Auto-focus logic can go here if needed
+    }
+  }));
+
+  return (
+    <Autocomplete
+      value={value}
+      onChange={setValue}
+      data={options}  // Data for the dropdown
+      placeholder="Type or select"
+      nothingFound="No options"
+      styles={{ input: { width: '100%' } }}  // Make it responsive
+    />
+  );
+});
+
+export default MantineAutocompleteEditor;
+```
+
+### 3. **Integrate the Editor in AG Grid**
+
+Now that you have the custom editor ready, you can use it within your AG Grid column definitions:
+
+```tsx
+import React from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import MantineAutocompleteEditor from './MantineAutocompleteEditor';
+
+const MyGrid = () => {
+  const rowData = [
+    { name: 'John', status: 'Active' },
+    { name: 'Doe', status: 'Inactive' },
+  ];
+
+  const options = ['Active', 'Inactive', 'Pending'];
+
+  const columnDefs = [
+    { field: 'name', headerName: 'Name' },
+    {
+      field: 'status',
+      headerName: 'Status',
+      editable: true,
+      cellEditor: MantineAutocompleteEditor,  // Use the custom editor
+      cellEditorParams: {
+        options: options,  // Pass options to Autocomplete
+      },
+    },
+  ];
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDefs}
+        domLayout="autoHeight"
+      />
+    </div>
+  );
+};
+
+export default MyGrid;
+```
+
+### 4. **How It Works:**
+- **Autocomplete**: The Mantine `Autocomplete` component provides both the dropdown and free-text input functionality.
+- **AG Grid Integration**: The `getValue()` method is required to return the selected or typed value to the grid when editing is complete.
+- **Props**: The `cellEditorParams` pass the list of options to the custom editor.
+
+### Key Benefits:
+- **Mantine Autocomplete** offers built-in functionality for both dropdown and free-text input, saving you from manual implementation.
+- Clean and reusable as it integrates well with AG Grid’s lifecycle using `useImperativeHandle`.
+
+By using Mantine's `Autocomplete` as the cell editor, you get a clean and professional solution for handling both free-text input and predefined dropdowns within AG Grid.
+
+Let me know if you need further adjustments!
+
+
+
 I apologize for the confusion. You are correct that **`cellEditorFramework`** does not exist in newer versions of AG Grid. In AG Grid, you now use **`cellEditor`** to assign custom React components or default editors. Let me walk you through the correct way to implement a **custom dropdown with free text** input in React, using the appropriate AG Grid APIs.
 
 ### Correct Solution: Implementing a Custom Cell Editor in AG Grid (React)
