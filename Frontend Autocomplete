@@ -1,0 +1,129 @@
+To make the `AutocompleteEditor` reusable with dynamic options passed as props and written in TypeScript, here’s an updated version of the component. This implementation will pass the options through `props` so it can be reused across different columns.
+
+### Updated Steps:
+
+1. **Install necessary packages** (if not done already):
+
+   ```
+   npm install ag-grid-react react-select
+   ```
+
+2. **Create a reusable `AutocompleteEditor` in TypeScript**:
+
+   Here is the updated version of the `AutocompleteEditor` component:
+
+   ```tsx
+   import React, { useState, useEffect } from 'react';
+   import Select from 'react-select';
+   import { CellEditorCommonParams } from 'ag-grid-community';
+
+   // Define the types for the props
+   type OptionType = { value: string; label: string };
+
+   interface AutocompleteEditorProps extends CellEditorCommonParams {
+     options: OptionType[];  // The options will be passed as props
+   }
+
+   const AutocompleteEditor: React.FC<AutocompleteEditorProps> = (props) => {
+     const [selectedValue, setSelectedValue] = useState<OptionType | null>(null);
+
+     // Set initial value when the editor starts
+     useEffect(() => {
+       if (props.value) {
+         setSelectedValue({ value: props.value, label: props.value });
+       }
+     }, [props.value]);
+
+     // Handle option change
+     const handleChange = (selectedOption: OptionType | null) => {
+       setSelectedValue(selectedOption);
+       props.api.stopEditing(); // Stop editing after selection
+     };
+
+     // Required AG Grid method to return the value to the grid
+     const getValue = () => {
+       return selectedValue ? selectedValue.value : props.value;
+     };
+
+     // Set isPopup to true to let the dropdown appear outside the grid cell
+     const isPopup = () => true;
+
+     return (
+       <Select
+         value={selectedValue}
+         onChange={handleChange}
+         options={props.options}
+         menuPortalTarget={document.body} // To handle overflow issues
+         menuPosition="fixed"
+         autoFocus
+       />
+     );
+   };
+
+   export default AutocompleteEditor;
+   ```
+
+3. **Configure the AG Grid with dynamic options**:
+
+   You can now pass dynamic options for different columns while configuring the AG Grid. Here’s an example:
+
+   ```tsx
+   import React, { useState } from 'react';
+   import { AgGridReact } from 'ag-grid-react';
+   import 'ag-grid-community/styles/ag-grid.css';
+   import 'ag-grid-community/styles/ag-theme-alpine.css';
+   import AutocompleteEditor from './AutocompleteEditor';
+
+   type RowData = {
+     name: string;
+     status: string;
+   };
+
+   const MyGrid: React.FC = () => {
+     const [rowData] = useState<RowData[]>([
+       { name: 'John', status: 'Option 1' },
+       { name: 'Doe', status: 'Option 2' },
+     ]);
+
+     const optionsStatus = [
+       { value: 'Option 1', label: 'Option 1' },
+       { value: 'Option 2', label: 'Option 2' },
+       { value: 'Option 3', label: 'Option 3' },
+     ];
+
+     const columnDefs = [
+       { field: 'name', headerName: 'Name' },
+       {
+         field: 'status',
+         headerName: 'Status',
+         editable: true,
+         cellEditorFramework: AutocompleteEditor,
+         cellEditorParams: {
+           options: optionsStatus, // Pass options as props
+         },
+       },
+     ];
+
+     return (
+       <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+         <AgGridReact
+           rowData={rowData}
+           columnDefs={columnDefs}
+           domLayout="autoHeight"
+         />
+       </div>
+     );
+   };
+
+   export default MyGrid;
+   ```
+
+4. **Explainations**:
+
+   - **`AutocompleteEditorProps`**: The props interface is extended from `CellEditorCommonParams`, which is provided by AG Grid for editor components. This allows the editor to interact with AG Grid’s lifecycle methods like `getValue()` and `isPopup()`.
+   - **`options: OptionType[]`**: The `options` array is passed as part of the `cellEditorParams` in the grid’s `columnDefs`. This makes it reusable for any column that requires different autocomplete options.
+   - **`handleChange`**: When an option is selected from the dropdown, the selected value is stored in state and the editing session ends by calling `props.api.stopEditing()`.
+   - **`getValue()`**: This method is required by AG Grid to retrieve the final value selected in the autocomplete input and return it to the grid.
+   - **`isPopup()`**: This ensures the autocomplete dropdown renders as a popup that floats above the grid, preventing it from being clipped by the grid’s bounds.
+
+This solution gives you a reusable `AutocompleteEditor` in TypeScript with dynamic options that can be passed as props in AG Grid.
