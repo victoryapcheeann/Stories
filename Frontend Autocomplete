@@ -1,3 +1,60 @@
+import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
+import { Autocomplete } from '@mantine/core';
+import { ICellEditorParams } from 'ag-grid-community';
+
+// Custom editor for AG Grid using Mantine's Autocomplete
+const MantineAutocompleteEditor = forwardRef((props: ICellEditorParams, ref) => {
+  const [value, setValue] = useState<string>(props.value || ''); // Initialize with the current value
+  const options: string[] = props.options || []; // Options for the autocomplete
+
+  useEffect(() => {
+    // Ensure the value is updated if props.value changes
+    setValue(props.value || '');
+  }, [props.value]);
+
+  // Expose methods to AG Grid via useImperativeHandle
+  useImperativeHandle(ref, () => ({
+    // AG Grid calls this method to get the value that should be placed in the cell
+    getValue: () => value,
+
+    // Optional: Focus handling when editing starts
+    afterGuiAttached: () => {
+      // You can optionally focus on the input field here if needed
+    },
+  }));
+
+  // Handle input change
+  const handleInputChange = (newValue: string) => {
+    setValue(newValue); // Update local state with the new value
+  };
+
+  // Handle key press (stop editing when Enter is pressed)
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      props.api.stopEditing(); // Stop editing and save value when Enter is pressed
+    }
+  };
+
+  return (
+    <Autocomplete
+      value={value}
+      onChange={handleInputChange}
+      data={options} // Dropdown options
+      placeholder="Type or select"
+      nothingFound="No options"
+      styles={{ input: { width: '100%' } }} // Responsive styling
+      onKeyDown={handleKeyDown} // Listen for Enter key
+    />
+  );
+});
+
+export default MantineAutocompleteEditor;
+
+
+
+
+
+
 The issue of the value not being updated when pressing Enter in the **Mantine Autocomplete** component within AG Grid is likely due to AG Grid's lifecycle handling, where pressing Enter does not explicitly stop the editing process. In AG Grid, when editing, you usually need to **stop editing** when the user presses Enter to finalize the value.
 
 ### Solution:
