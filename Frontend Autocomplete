@@ -1,3 +1,123 @@
+The issue of the value not being updated when pressing Enter in the **Mantine Autocomplete** component within AG Grid is likely due to AG Grid's lifecycle handling, where pressing Enter does not explicitly stop the editing process. In AG Grid, when editing, you usually need to **stop editing** when the user presses Enter to finalize the value.
+
+### Solution:
+To fix this, we need to handle the Enter key press within the editor and programmatically stop editing when Enter is pressed. Here's how you can implement it:
+
+1. **Capture Enter key press**: Listen for the Enter key press within the `MantineAutocompleteEditor`.
+2. **Stop editing on Enter**: Call `props.api.stopEditing()` when the Enter key is pressed.
+
+### Updated `MantineAutocompleteEditor` Component
+
+```tsx
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import { Autocomplete } from '@mantine/core';
+
+const MantineAutocompleteEditor = forwardRef((props, ref) => {
+  const [value, setValue] = useState(props.value || '');  // Initialize with the current value
+  const options = props.options || [];  // Options for the autocomplete
+
+  // Expose methods that AG Grid calls on the cell editor
+  useImperativeHandle(ref, () => ({
+    // Called by AG Grid to get the value that should be placed in the cell
+    getValue() {
+      return value;
+    },
+    // Focus on the input field when editing starts
+    afterGuiAttached() {
+      // Auto-focus logic can go here if needed
+    }
+  }));
+
+  // Handle input change
+  const handleInputChange = (newValue) => {
+    setValue(newValue);
+  };
+
+  // Handle Enter key press to stop editing
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      props.api.stopEditing();  // Stop editing when Enter is pressed
+    }
+  };
+
+  return (
+    <Autocomplete
+      value={value}
+      onChange={handleInputChange}
+      data={options}  // Data for the dropdown
+      placeholder="Type or select"
+      nothingFound="No options"
+      styles={{ input: { width: '100%' } }}  // Make it responsive
+      onKeyDown={handleKeyDown}  // Listen for Enter key
+    />
+  );
+});
+
+export default MantineAutocompleteEditor;
+```
+
+### Explanation:
+1. **`onKeyDown`**: A `handleKeyDown` function is added to listen for key events. When the Enter key is pressed (`event.key === 'Enter'`), `props.api.stopEditing()` is called to finalize the value and update the grid.
+   
+2. **`props.api.stopEditing()`**: This method tells AG Grid to stop the editing session and accept the current value.
+
+### Final Integration in AG Grid
+
+```tsx
+import React from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import MantineAutocompleteEditor from './MantineAutocompleteEditor';
+
+const MyGrid = () => {
+  const rowData = [
+    { name: 'John', status: 'Active' },
+    { name: 'Doe', status: 'Inactive' },
+  ];
+
+  const options = ['Active', 'Inactive', 'Pending'];
+
+  const columnDefs = [
+    { field: 'name', headerName: 'Name' },
+    {
+      field: 'status',
+      headerName: 'Status',
+      editable: true,
+      cellEditor: MantineAutocompleteEditor,  // Use the custom editor
+      cellEditorParams: {
+        options: options,  // Pass options to Autocomplete
+      },
+    },
+  ];
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDefs}
+        domLayout="autoHeight"
+      />
+    </div>
+  );
+};
+
+export default MyGrid;
+```
+
+### How It Works:
+- The **`handleKeyDown`** function ensures that pressing Enter commits the value by calling `props.api.stopEditing()`.
+- The value from the `Autocomplete` component is properly returned to AG Grid when editing ends.
+
+This should resolve the issue, and pressing Enter will now update the grid with the selected or typed value.
+
+Let me know if this solution works for you!
+
+
+
+
+
+
 Yes, you can use **Mantine's Autocomplete** component as a custom cell editor in AG Grid instead of manually implementing one from scratch. Mantine's Autocomplete allows both selecting from predefined options and typing free text, which fits your use case perfectly.
 
 Here’s how to integrate Mantine's `Autocomplete` component as a custom cell editor in AG Grid.
