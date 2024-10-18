@@ -1,3 +1,144 @@
+I apologize for the confusion. You are correct that **`cellEditorFramework`** does not exist in newer versions of AG Grid. In AG Grid, you now use **`cellEditor`** to assign custom React components or default editors. Let me walk you through the correct way to implement a **custom dropdown with free text** input in React, using the appropriate AG Grid APIs.
+
+### Correct Solution: Implementing a Custom Cell Editor in AG Grid (React)
+
+Here's how to correctly create a custom cell editor that allows both free text input and dropdown selection.
+
+### Steps to Implement a Custom Cell Editor
+
+1. **Define Your Custom Cell Editor Component**:
+   - This component combines a free text input and a dropdown.
+   - Use React's standard hooks like `useState` and `useEffect` to manage the component's state.
+
+```tsx
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+
+// Define the Custom Cell Editor component
+const CustomDropdownEditor = forwardRef((props, ref) => {
+  const [value, setValue] = useState(props.value || '');  // Initialize with the current value
+  const [options] = useState(props.options || []);  // Options for the dropdown
+  const inputRef = useRef(null);  // Reference to input field
+
+  useEffect(() => {
+    // Focus on the input field when the editor opens
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  // Imperative handle to provide methods to AG Grid
+  useImperativeHandle(ref, () => ({
+    // AG Grid will call this method to get the value that should be placed in the cell
+    getValue() {
+      return value;
+    },
+    // Focus on the input field when the editor is attached
+    afterGuiAttached() {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    },
+  }));
+
+  // Handle input change
+  const handleInputChange = (e) => {
+    setValue(e.target.value);
+  };
+
+  // Handle dropdown selection
+  const handleSelectChange = (e) => {
+    setValue(e.target.value);
+  };
+
+  return (
+    <div>
+      {/* Free text input */}
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={handleInputChange}
+        style={{ marginBottom: '5px', width: '100%' }}
+        placeholder="Type or select"
+      />
+
+      {/* Dropdown for predefined options */}
+      <select value={value} onChange={handleSelectChange} style={{ width: '100%' }}>
+        <option value="">-- Select an option --</option>
+        {options.map((option, index) => (
+          <option key={index} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+});
+
+export default CustomDropdownEditor;
+```
+
+### 2. **Integrating the Custom Editor into AG Grid**:
+   - Use `cellEditor` instead of the old `cellEditorFramework`.
+   - Set the custom editor for the relevant column.
+
+```tsx
+import React from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import CustomDropdownEditor from './CustomDropdownEditor';
+
+const MyGrid = () => {
+  const rowData = [
+    { name: 'John', status: 'Active' },
+    { name: 'Doe', status: 'Inactive' },
+  ];
+
+  const options = ['Active', 'Inactive', 'Pending'];
+
+  const columnDefs = [
+    { field: 'name', headerName: 'Name' },
+    {
+      field: 'status',
+      headerName: 'Status',
+      editable: true,
+      cellEditor: CustomDropdownEditor,  // Use cellEditor with the custom component
+      cellEditorParams: {
+        options: options,  // Pass options for the dropdown
+      },
+    },
+  ];
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDefs}
+        domLayout="autoHeight"
+      />
+    </div>
+  );
+};
+
+export default MyGrid;
+```
+
+### Explanation:
+1. **`cellEditor`**: This is now the correct property to use for adding a custom cell editor. 
+2. **`getValue()`**: This method is required for the editor to pass the value back to AG Grid.
+3. **Free Text & Dropdown**: The user can either type a custom value or select from the dropdown.
+
+This method works with modern AG Grid versions, ensuring the custom cell editor integrates properly into the grid.
+
+Please test this approach and let me know if it works for your use case!
+
+
+
+
+
+
+
 Apologies for the confusion. Let me provide a more detailed and corrected solution.
 
 In order to create a custom AG Grid cell editor with both a text input and a dropdown that works as expected, we need to ensure that the state is properly updated and the grid editing lifecycle (e.g., stopping editing, retrieving values) is correctly handled.
