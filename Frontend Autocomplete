@@ -1,3 +1,149 @@
+Apologies for the confusion. Let me provide a more detailed and corrected solution.
+
+In order to create a custom AG Grid cell editor with both a text input and a dropdown that works as expected, we need to ensure that the state is properly updated and the grid editing lifecycle (e.g., stopping editing, retrieving values) is correctly handled.
+
+Here is a working version of a custom cell editor for AG Grid that allows free text input and also supports dropdown selection.
+
+### Custom Cell Editor with Free Text and Dropdown:
+
+```tsx
+import React, { useState, useEffect, useRef } from 'react';
+
+const CustomSelectEditor: React.FC<any> = (props: any) => {
+  const [inputValue, setInputValue] = useState<string>(props.value || '');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const options = props.options || [];
+
+  useEffect(() => {
+    // Focus on input when editor starts
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  // Handle input change (free text)
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value);
+  };
+
+  // Handle select change (dropdown selection)
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setInputValue(event.target.value);
+    setIsDropdownOpen(false); // Close dropdown after selection
+    props.api.stopEditing(); // Stop editing and save value
+  };
+
+  // AG Grid method to return the value to the grid
+  const getValue = () => {
+    return inputValue;
+  };
+
+  // AG Grid lifecycle hook, triggered when the editor stops
+  const isPopup = () => true;
+
+  return (
+    <div>
+      {/* Input field for free text */}
+      <input
+        type="text"
+        ref={inputRef}
+        value={inputValue}
+        onChange={handleInputChange}
+        style={{ marginBottom: '5px', width: '100%' }}
+      />
+
+      {/* Dropdown for predefined options */}
+      <select value={inputValue} onChange={handleSelectChange} style={{ width: '100%' }}>
+        <option value="">-- Select an option --</option>
+        {options.map((option: string, index: number) => (
+          <option key={index} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+export default CustomSelectEditor;
+```
+
+### Explanation of Key Features:
+
+1. **Free Text Input Field**: 
+   - There is a simple `<input>` element where users can type any value they want. This value is stored in `inputValue`.
+
+2. **Dropdown for Predefined Options**:
+   - A `<select>` element is used to list predefined options. When a user selects an option, `inputValue` is updated accordingly, and the dropdown closes.
+
+3. **`getValue()`**:
+   - This method returns the current `inputValue` (either typed by the user or selected from the dropdown) to AG Grid.
+
+4. **Lifecycle Integration**:
+   - `isPopup()` is set to `true` so the editor can appear in a popup and remain visible while editing.
+   - `props.api.stopEditing()` is called to stop the editing process when the user selects an option from the dropdown.
+
+### Usage in AG Grid:
+
+Here’s how you can use this custom cell editor in your AG Grid setup:
+
+```tsx
+import React from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import CustomSelectEditor from './CustomSelectEditor';
+
+const MyGrid = () => {
+  const rowData = [
+    { name: 'John', status: 'Active' },
+    { name: 'Doe', status: 'Inactive' },
+  ];
+
+  const options = ['Active', 'Inactive', 'Pending'];
+
+  const columnDefs = [
+    { field: 'name', headerName: 'Name' },
+    {
+      field: 'status',
+      headerName: 'Status',
+      editable: true,
+      cellEditorFramework: CustomSelectEditor,
+      cellEditorParams: {
+        options: options,  // Pass the list of options
+      },
+    },
+  ];
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDefs}
+        domLayout="autoHeight"
+      />
+    </div>
+  );
+};
+
+export default MyGrid;
+```
+
+### How It Works:
+
+- The grid renders the `CustomSelectEditor` for the "status" column.
+- When the user clicks to edit the "status" cell, they see an input field where they can either type their own value or select from a dropdown list.
+- The `inputValue` updates either based on the user's typed input or based on the selected option from the dropdown.
+- The value is submitted back to the grid when the user stops editing or selects an option.
+
+### Summary:
+This solution allows both free text input and dropdown selection in AG Grid. The input field is always active, so users can type any value they want, while the dropdown provides a list of predefined options they can choose from.
+
+
+
+
 Sure! To make the editor more reusable and flexible, we can avoid specific types and use `any` for the options. Here's the updated version of the custom cell editor that works with any type of options (strings or other types), while also allowing free text input.
 
 ### Custom Cell Editor with Free Text and `any` Options
