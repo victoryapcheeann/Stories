@@ -1,3 +1,98 @@
+
+To make the `AutocompleteEditor` work with both typing and selecting from the dropdown (autocomplete functionality), you can still use `react-select` but configure it for **filterable** and **searchable** behavior.
+
+You need to set the `isSearchable` prop to `true` and `filterOption` to allow the user to search or type in the field.
+
+Here’s the updated `AutocompleteEditor` with autocomplete functionality:
+
+```tsx
+import React, { useState, useEffect } from 'react';
+import Select, { components, InputActionMeta } from 'react-select';
+import { CellEditorCommonParams } from 'ag-grid-community';
+
+// Define the types for the props
+type OptionType = { value: string; label: string };
+
+interface AutocompleteEditorProps extends CellEditorCommonParams {
+  options: OptionType[];  // The options will be passed as props
+}
+
+const AutocompleteEditor: React.FC<AutocompleteEditorProps> = (props) => {
+  const [selectedValue, setSelectedValue] = useState<OptionType | null>(null);
+  const [inputValue, setInputValue] = useState<string>('');  // Store user input
+
+  // Set initial value when the editor starts
+  useEffect(() => {
+    if (props.value) {
+      setSelectedValue({ value: props.value, label: props.value });
+    }
+  }, [props.value]);
+
+  // Handle option change
+  const handleChange = (selectedOption: OptionType | null) => {
+    setSelectedValue(selectedOption);
+    props.api.stopEditing(); // Stop editing after selection
+  };
+
+  // Capture user input as they type
+  const handleInputChange = (newValue: string, actionMeta: InputActionMeta) => {
+    setInputValue(newValue);
+  };
+
+  // Required AG Grid method to return the value to the grid
+  const getValue = () => {
+    return selectedValue ? selectedValue.value : inputValue;
+  };
+
+  // Set isPopup to true to let the dropdown appear outside the grid cell
+  const isPopup = () => true;
+
+  return (
+    <Select
+      value={selectedValue}
+      onChange={handleChange}
+      onInputChange={handleInputChange}
+      options={props.options}
+      menuPortalTarget={document.body} // To handle overflow issues
+      menuPosition="fixed"
+      isSearchable  // Allow searching
+      inputValue={inputValue} // Bind the user input
+      autoFocus
+      placeholder="Start typing or select..."
+    />
+  );
+};
+
+export default AutocompleteEditor;
+```
+
+### Key Changes:
+
+1. **User Input Tracking (`inputValue`)**:
+   - Added `inputValue` to store the text typed by the user.
+   - The `onInputChange` event handler captures and stores the user’s input.
+
+2. **Dynamic Return Value**:
+   - The `getValue()` function now checks if there is a selected option (`selectedValue`), and if not, it returns the user's typed input (`inputValue`).
+
+3. **Autocomplete**:
+   - By setting `isSearchable` to `true`, the user can type to search for options.
+   - The `inputValue` is bound to the `Select` component to handle both typing and dropdown selection.
+
+4. **Placeholder**:
+   - Added a `placeholder` prop to guide the user that they can start typing or select from the dropdown.
+
+### Explanation:
+
+- When the user starts typing, the `inputValue` will be updated and used as the grid value if no dropdown option is selected.
+- If the user selects from the dropdown, `selectedValue` will be updated, and the selected value will be used in the grid.
+
+This implementation now allows both selecting from the dropdown and typing in the autocomplete field, making it a fully functional autocomplete component in AG Grid. Let me know if you need any further adjustments!
+
+
+
+
+
 To make the `AutocompleteEditor` work with both typing and selecting from the dropdown (autocomplete functionality), you can still use `react-select` but configure it for **filterable** and **searchable** behavior.
 
 You need to set the `isSearchable` prop to `true` and `filterOption` to allow the user to search or type in the field.
