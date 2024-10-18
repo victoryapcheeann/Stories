@@ -1,3 +1,132 @@
+Sure! To make the editor more reusable and flexible, we can avoid specific types and use `any` for the options. Here's the updated version of the custom cell editor that works with any type of options (strings or other types), while also allowing free text input.
+
+### Custom Cell Editor with Free Text and `any` Options
+
+```tsx
+import React, { useState } from 'react';
+import { CellEditorCommonParams } from 'ag-grid-community';
+
+const CustomSelectEditor: React.FC<any> = (props: any) => {
+  const [inputValue, setInputValue] = useState<string>(props.value || '');
+  const [options] = useState<any[]>(props.options || []);
+
+  // Handle input change for free text input
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value);
+  };
+
+  // Handle select change for dropdown selection
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setInputValue(event.target.value);
+  };
+
+  // AG Grid method to return the value to the grid
+  const getValue = () => {
+    return inputValue;
+  };
+
+  return (
+    <div>
+      {/* Input field for free text */}
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        style={{ marginBottom: '5px', width: '100%' }}
+      />
+
+      {/* Dropdown for predefined options */}
+      <select value={inputValue} onChange={handleSelectChange} style={{ width: '100%' }}>
+        <option value="">-- Select an option --</option>
+        {options.map((option: any, index: number) => (
+          <option key={index} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+export default CustomSelectEditor;
+```
+
+### Explanation:
+
+1. **Free Text Input Field**: 
+   - There is a simple `<input>` element that allows the user to type any value they want, which gets stored in `inputValue`.
+
+2. **Dropdown for Predefined Options**:
+   - A `<select>` element is used to list predefined options. When the user selects an option, it also updates `inputValue`.
+
+3. **`getValue()` Method**:
+   - The value of the cell will be either the user-typed text or the selected option from the dropdown, whichever was most recently updated.
+
+4. **Using `any`**:
+   - The `props.options` can now accept any type of data (strings, numbers, objects), making this cell editor more reusable. If you need to format or handle other types, you can adjust the mapping inside the `select`.
+
+### Usage in AG Grid:
+
+Here’s how you can use the `CustomSelectEditor` in your AG Grid column definition:
+
+```tsx
+import React from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import CustomSelectEditor from './CustomSelectEditor';
+
+const MyGrid = () => {
+  const rowData = [
+    { name: 'John', status: 'Active' },
+    { name: 'Doe', status: 'Inactive' }
+  ];
+
+  const options = ['Active', 'Inactive', 'Pending'];
+
+  const columnDefs = [
+    { field: 'name', headerName: 'Name' },
+    {
+      field: 'status',
+      headerName: 'Status',
+      editable: true,
+      cellEditorFramework: CustomSelectEditor,
+      cellEditorParams: {
+        options: options,  // Pass the list of options
+      },
+    },
+  ];
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDefs}
+        domLayout="autoHeight"
+      />
+    </div>
+  );
+};
+
+export default MyGrid;
+```
+
+### How It Works:
+
+- The grid renders the `CustomSelectEditor` for the "status" column.
+- When a user edits the cell, they can either:
+  - Type a free text value in the input field.
+  - Select an option from the dropdown.
+- The result (either typed or selected) is passed back to the grid via the `getValue()` function.
+
+This approach allows you to have a cell editor that supports both free text input and dropdown selection. The `options` can be passed as any data type, making it reusable across different columns in your grid.
+
+
+
+
+
+
+
 
 To make the `AutocompleteEditor` work with both typing and selecting from the dropdown (autocomplete functionality), you can still use `react-select` but configure it for **filterable** and **searchable** behavior.
 
