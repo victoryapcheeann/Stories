@@ -1,43 +1,97 @@
+frameworkComponents={{
+    mantineAutocompleteCellEditor: MantineAutocompleteCellEditor,
+  }}
+
+
+const handleBlur = () => {
+  console.log('Input lost focus');
+  if (props.stopEditing) {
+    props.stopEditing();
+  } else {
+    console.error('props.stopEditing is not defined');
+  }
+};
+
+// Add `onBlur` to the `Autocomplete` component
+<Autocomplete
+  inputRef={inputRef}
+  value={value}
+  data={options}
+  onChange={(newValue) => setValue(newValue)}
+  onItemSubmit={handleItemSubmit}
+  onBlur={handleBlur}
+  placeholder="Type or select"
+  nothingFound="No options"
+  styles={{ input: { width: '100%' } }}
+/>
+
+
+
+
 import { Autocomplete } from '@mantine/core';
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 const MantineAutocompleteCellEditor = forwardRef((props, ref) => {
   const [value, setValue] = useState(props.value || '');
   const options = props.values || [];
+  const inputRef = useRef(null);
 
   useEffect(() => {
-    const input = document.querySelector('input');
-    if (input) input.focus();
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   }, []);
 
   useImperativeHandle(ref, () => ({
-    getValue: () => value,
+    getValue: () => {
+      console.log('getValue called, returning:', value);
+      return value;
+    },
     afterGuiAttached: () => {
-      const input = document.querySelector('input');
-      if (input) input.focus();
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     },
   }));
 
-  // Handle key presses, particularly the Enter key
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
-      props.stopEditing(); // Inform AG Grid that editing is complete
+  // Handle key presses directly on the input element
+  useEffect(() => {
+    const inputElement = inputRef.current;
+
+    const handleKeyDown = (event) => {
+      console.log('Key pressed:', event.key);
+      if (event.key === 'Enter') {
+        console.log('Enter key pressed');
+        event.preventDefault(); // Prevent default to avoid unintended behavior
+        props.stopEditing(); // Inform AG Grid that editing is complete
+      }
+    };
+
+    if (inputElement) {
+      inputElement.addEventListener('keydown', handleKeyDown);
     }
-  };
+
+    return () => {
+      if (inputElement) {
+        inputElement.removeEventListener('keydown', handleKeyDown);
+      }
+    };
+  }, [props]);
 
   // Handle item selection from the autocomplete dropdown
   const handleItemSubmit = (item) => {
+    console.log('Item submitted:', item);
     setValue(item.value || item);
     props.stopEditing(); // Inform AG Grid that editing is complete
   };
 
   return (
     <Autocomplete
+      inputRef={inputRef}
       value={value}
       data={options}
       onChange={(newValue) => setValue(newValue)}
-      onKeyDown={handleKeyDown} // Add the onKeyDown handler
-      onItemSubmit={handleItemSubmit} // Add the onItemSubmit handler
+      onItemSubmit={handleItemSubmit}
       placeholder="Type or select"
       nothingFound="No options"
       styles={{ input: { width: '100%' } }}
