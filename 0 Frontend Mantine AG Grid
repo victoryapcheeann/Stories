@@ -1,60 +1,33 @@
-import { ICellEditorParams, ICellEditorComp } from '@ag-grid-community/core';
 import { Autocomplete } from '@mantine/core';
-import React from 'react';
-import ReactDOM from 'react-dom';
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 
-export class MantineAutocompleteEditor implements ICellEditorComp {
-  private container: HTMLDivElement;
-  private value: string = '';
-  private options: string[] = [];
+// Custom cell editor using Mantine Autocomplete
+const MantineAutocompleteCellEditor = forwardRef((props, ref) => {
+  // Initialize the state with the current value
+  const [value, setValue] = useState(props.value || '');
+  const options = props.values || []; // The options for the Autocomplete
 
-  constructor() {
-    this.container = document.createElement('div');
-    this.container.style = 'padding: 8px; border: 1px solid #ccc; border-radius: 4px;';
-  }
+  useEffect(() => {
+    // Focus on the input after the component is mounted
+    const input = document.querySelector('input');
+    if (input) input.focus();
+  }, []);
 
-  init(params: ICellEditorParams) {
-    this.value = params.value || ''; // Initialize with the current value
-    this.options = params.options || []; // Dropdown options
+  // Use ImperativeHandle to expose AG Grid lifecycle methods
+  useImperativeHandle(ref, () => ({
+    getValue: () => value, // Return the selected or typed value
+  }));
 
-    // Use React to render the Mantine Autocomplete component
-    ReactDOM.render(
-      <Autocomplete
-        value={this.value}
-        data={this.options}
-        onChange={(newValue: string) => this.value = newValue}
-        placeholder="Type or select"
-        nothingFound="No options"
-      />,
-      this.container
-    );
+  return (
+    <Autocomplete
+      value={value}
+      data={options} // Provide the dropdown options
+      onChange={setValue} // Update the value when the user types/selects
+      placeholder="Type or select"
+      nothingFound="No options"
+      styles={{ input: { width: '100%', height: '100%' } }}
+    />
+  );
+});
 
-    // Stop editing when user presses Enter
-    this.container.addEventListener('keydown', (event: KeyboardEvent) => {
-      if (event.key === 'Enter') {
-        params.stopEditing();
-      }
-    });
-  }
-
-  getGui() {
-    return this.container; // Return the container with the rendered Autocomplete component
-  }
-
-  afterGuiAttached() {
-    const inputElement = this.container.querySelector('input');
-    if (inputElement) inputElement.focus(); // Focus the input after attaching to DOM
-  }
-
-  getValue() {
-    return this.value; // Return the selected value when editing is complete
-  }
-
-  destroy() {
-    ReactDOM.unmountComponentAtNode(this.container); // Clean up when editor is destroyed
-  }
-
-  isPopup() {
-    return true; // Make the editor behave like a popup
-  }
-}
+export default MantineAutocompleteCellEditor;
