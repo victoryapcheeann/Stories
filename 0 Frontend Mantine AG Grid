@@ -1,0 +1,149 @@
+To reimplement the custom **Mantine Autocomplete** cell editor using the official example provided by AG Grid for custom editors, we need to follow the `ICellEditorComp` interface.
+
+We will create a class-based component that adheres to AG Grid's lifecycle methods (`init`, `getGui`, `getValue`, etc.) and integrates Mantine’s `Autocomplete` component inside the editor.
+
+### Steps:
+
+1. **Create a new class component** implementing `ICellEditorComp`.
+2. **Use Mantine's `Autocomplete` component inside `getGui()`**.
+3. **Handle value updates and editing lifecycle with `init`, `afterGuiAttached`, and `getValue()`**.
+
+### Custom Mantine Autocomplete Editor:
+
+```tsx
+import React from 'react';
+import { Autocomplete } from '@mantine/core';
+import { ICellEditorComp, ICellEditorParams } from '@ag-grid-community/core';
+
+// Custom editor using Mantine's Autocomplete
+export class MantineAutocompleteEditor implements ICellEditorComp {
+  private eInput!: HTMLDivElement;  // Container for the Autocomplete component
+  private value!: string;  // Current value of the editor
+  private params!: ICellEditorParams;
+
+  // Called once when the editor is created
+  init(params: ICellEditorParams) {
+    this.params = params;
+    this.value = params.value || '';  // Set initial value
+
+    // Create a container element for the Autocomplete
+    this.eInput = document.createElement('div');
+    this.eInput.classList.add('mantine-autocomplete-container');
+
+    // Render the Autocomplete component inside the container using React
+    const options: string[] = params.options || [];
+
+    const autoCompleteElement = (
+      <Autocomplete
+        data={options}
+        value={this.value}
+        onChange={(newValue: string) => (this.value = newValue)}
+        placeholder="Type or select"
+        styles={{ input: { width: '100%' } }}
+        nothingFound="No options"
+      />
+    );
+
+    // Use React's render method to mount the Autocomplete in the container
+    React.render(autoCompleteElement, this.eInput);
+  }
+
+  // Return the container element with the Autocomplete component
+  getGui(): HTMLElement {
+    return this.eInput;
+  }
+
+  // Return the current value when editing is complete
+  getValue(): any {
+    return this.value;
+  }
+
+  // Called after the editor is attached to the DOM
+  afterGuiAttached() {
+    const inputElement = this.eInput.querySelector('input');
+    if (inputElement) {
+      inputElement.focus();  // Focus on the input field when editing starts
+    }
+  }
+
+  // Clean up when the editor is destroyed (if necessary)
+  destroy() {
+    React.unmountComponentAtNode(this.eInput);  // Clean up React component
+  }
+
+  // Optional: specify that this editor is a popup
+  isPopup(): boolean {
+    return false;  // False to keep the editor within the grid's cell
+  }
+}
+```
+
+### Explanation:
+
+- **`init(params)`**: Initializes the editor with the value from the grid and creates a container (`this.eInput`) for the `Mantine Autocomplete`. React renders the Autocomplete inside this container.
+  
+- **`getGui()`**: Returns the DOM element that AG Grid will attach to the grid cell. In this case, it's the div containing the Autocomplete.
+
+- **`getValue()`**: Returns the final value that the user entered or selected in the Autocomplete.
+
+- **`afterGuiAttached()`**: Automatically focuses on the input field after the editor is attached to the DOM, ensuring a smooth user experience.
+
+- **`destroy()`**: Unmounts the React component from the DOM when the editor is destroyed to prevent memory leaks.
+
+- **`isPopup()`**: Specifies whether this editor should appear as a popup. In this case, it is set to `false` to keep the editor inside the cell.
+
+### Integration with AG Grid:
+
+Now, let's integrate this custom editor with AG Grid in your column definitions.
+
+```tsx
+import React from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { MantineAutocompleteEditor } from './MantineAutocompleteEditor';  // Import the custom editor
+
+const MyGrid: React.FC = () => {
+  const rowData = [
+    { name: 'John', status: 'Active' },
+    { name: 'Doe', status: 'Inactive' },
+  ];
+
+  const options = ['Active', 'Inactive', 'Pending'];
+
+  const columnDefs = [
+    { field: 'name', headerName: 'Name' },
+    {
+      field: 'status',
+      headerName: 'Status',
+      editable: true,
+      cellEditor: MantineAutocompleteEditor,  // Use the custom editor
+      cellEditorParams: {
+        options: options,  // Pass dropdown options
+      },
+    },
+  ];
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <AgGridReact
+        rowData={rowData}
+        columnDefs={columnDefs}
+        domLayout="autoHeight"
+      />
+    </div>
+  );
+};
+
+export default MyGrid;
+```
+
+### Key Points:
+1. **Lifecycle Methods**: The component lifecycle (`init`, `getGui`, `getValue`) ensures that AG Grid can interact with the editor, get the final value, and handle the user input correctly.
+  
+2. **Mantine Integration**: Mantine's Autocomplete component is used inside the custom editor to allow both free text input and selection from predefined options.
+
+3. **Memory Management**: The React component is unmounted in the `destroy()` method to avoid memory leaks when the editor is no longer needed.
+
+### Conclusion:
+This approach follows AG Grid's official interface and integrates Mantine's Autocomplete in a clean, class-based implementation. The editor now handles the AG Grid lifecycle and behaves as expected within the grid.
