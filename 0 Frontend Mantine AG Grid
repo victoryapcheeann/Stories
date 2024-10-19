@@ -1,52 +1,39 @@
-import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Autocomplete } from '@mantine/core';
 import { ICellEditorParams } from 'ag-grid-community';
 
-// Custom editor for AG Grid using Mantine's Autocomplete
-const MantineAutocompleteEditor = forwardRef((props: ICellEditorParams, ref) => {
-  const [value, setValue] = useState<string>(props.value || ''); // Initialize with the current value
-  const options: string[] = props.options || []; // Options for the autocomplete
+const MantineAutocompleteEditor = (props: ICellEditorParams) => {
+  const [value, setValue] = useState<string>(props.value || '');  // Initialize with current value
+  const options: string[] = props.options || [];  // Dropdown options
 
   useEffect(() => {
-    // Ensure the value is updated if props.value changes
+    // Update the value when props.value changes
     setValue(props.value || '');
   }, [props.value]);
 
-  // Expose methods to AG Grid via useImperativeHandle
-  useImperativeHandle(ref, () => ({
-    // AG Grid calls this method to get the value that should be placed in the cell
-    getValue: () => value,
-
-    // Optional: Focus handling when editing starts
-    afterGuiAttached: () => {
-      const input = document.querySelector('input');
-      if (input) input.focus();
-    },
-  }));
-
-  // Handle input change
-  const handleInputChange = (newValue: string) => {
-    setValue(newValue); // Update local state with the new value
-  };
-
-  // Handle key press (stop editing when Enter is pressed)
+  // Stop editing and save the value when Enter is pressed
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      props.api.stopEditing(); // Stop editing and save value when Enter is pressed
+      props.api.stopEditing();  // Stop AG Grid's editing process
     }
   };
 
   return (
     <Autocomplete
       value={value}
-      onChange={handleInputChange}
-      data={options} // Dropdown options
+      onChange={(newValue) => setValue(newValue)}  // Update the local state on change
+      data={options}  // Dropdown options
       placeholder="Type or select"
       nothingFound="No options"
-      styles={{ input: { width: '100%' } }} // Responsive styling
-      onKeyDown={handleKeyDown} // Listen for Enter key
+      styles={{ input: { width: '100%' } }}
+      onKeyDown={handleKeyDown}  // Stop editing when Enter is pressed
     />
   );
-});
+};
+
+// For AG Grid to retrieve the value after editing
+MantineAutocompleteEditor.prototype.getValue = function () {
+  return this.value;
+};
 
 export default MantineAutocompleteEditor;
