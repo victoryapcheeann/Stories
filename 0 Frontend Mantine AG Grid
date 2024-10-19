@@ -1,51 +1,49 @@
-import React from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Autocomplete } from '@mantine/core';
-import { ICellEditorComp, ICellEditorParams } from 'ag-grid-community';
 
-export class MantineAutocompleteEditor extends React.Component<ICellEditorParams> implements ICellEditorComp {
-  private value: string;
-  private options: string[];
+// Custom Cell Editor using Mantine Autocomplete
+const MantineAutocompleteEditor = forwardRef((props, ref) => {
+  const [value, setValue] = useState(props.value || ''); // Initialize with the initial cell value
+  const options = props.options || []; // Dropdown options
 
-  constructor(props: ICellEditorParams) {
-    super(props);
-    this.value = props.value || ''; // Initialize with the current value
-    this.options = props.options || []; // Options for the autocomplete
-  }
+  // Use Imperative Handle to expose methods to AG Grid
+  useImperativeHandle(ref, () => ({
+    getValue() {
+      return value; // Return the value to AG Grid after editing
+    },
+    isPopup() {
+      return true; // Make this a popup editor so it doesn't constrain to the cell size
+    },
+    afterGuiAttached() {
+      // Focus on the input field when the component is attached to the DOM
+      const input = document.querySelector('input');
+      if (input) input.focus();
+    },
+  }));
 
-  // Method to get the current value after editing
-  getValue() {
-    return this.value;
-  }
-
-  // Focus on the input field after the editor is attached to the DOM
-  afterGuiAttached() {
-    const input = document.querySelector('input');
-    if (input) input.focus();
-  }
-
-  // Handle input change for Mantine's Autocomplete
-  handleInputChange = (newValue: string) => {
-    this.value = newValue; // Update the value when the user types/selects
+  // Handle value change from the Autocomplete component
+  const handleChange = (newValue: string) => {
+    setValue(newValue); // Update the state when the value changes
   };
 
-  // Stop editing and save value when Enter is pressed
-  handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  // Stop editing when the Enter key is pressed
+  const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter') {
-      this.props.api.stopEditing(); // Stop AG Grid's editing process
+      props.api.stopEditing(); // Stop editing and submit the value
     }
   };
 
-  render() {
-    return (
-      <Autocomplete
-        value={this.value}
-        onChange={this.handleInputChange}
-        data={this.options} // Dropdown options
-        placeholder="Type or select"
-        nothingFound="No options"
-        styles={{ input: { width: '100%' } }}
-        onKeyDown={this.handleKeyDown} // Stop editing when Enter is pressed
-      />
-    );
-  }
-}
+  return (
+    <Autocomplete
+      value={value}
+      onChange={handleChange} // Update the value on change
+      data={options} // Provide options for the dropdown
+      placeholder="Type or select"
+      nothingFound="No options"
+      styles={{ input: { width: '100%' } }}
+      onKeyDown={handleKeyDown} // Handle key press events
+    />
+  );
+});
+
+export default MantineAutocompleteEditor;
