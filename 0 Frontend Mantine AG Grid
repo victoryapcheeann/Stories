@@ -1,102 +1,64 @@
-frameworkComponents={{
-    mantineAutocompleteCellEditor: MantineAutocompleteCellEditor,
-  }}
-
-
-const handleBlur = () => {
-  console.log('Input lost focus');
-  if (props.stopEditing) {
-    props.stopEditing();
-  } else {
-    console.error('props.stopEditing is not defined');
-  }
-};
-
-// Add `onBlur` to the `Autocomplete` component
-<Autocomplete
-  inputRef={inputRef}
-  value={value}
-  data={options}
-  onChange={(newValue) => setValue(newValue)}
-  onItemSubmit={handleItemSubmit}
-  onBlur={handleBlur}
-  placeholder="Type or select"
-  nothingFound="No options"
-  styles={{ input: { width: '100%' } }}
-/>
-
-
-
-
+import React, { Component } from 'react';
 import { Autocomplete } from '@mantine/core';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-const MantineAutocompleteCellEditor = forwardRef((props, ref) => {
-  const [value, setValue] = useState(props.value || '');
-  const options = props.values || [];
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, []);
-
-  useImperativeHandle(ref, () => ({
-    getValue: () => {
-      console.log('getValue called, returning:', value);
-      return value;
-    },
-    afterGuiAttached: () => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    },
-  }));
-
-  // Handle key presses directly on the input element
-  useEffect(() => {
-    const inputElement = inputRef.current;
-
-    const handleKeyDown = (event) => {
-      console.log('Key pressed:', event.key);
-      if (event.key === 'Enter') {
-        console.log('Enter key pressed');
-        event.preventDefault(); // Prevent default to avoid unintended behavior
-        props.stopEditing(); // Inform AG Grid that editing is complete
-      }
+class MantineAutocompleteCellEditor extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: props.value || '',
+      options: props.values || [],
     };
+    this.inputRef = React.createRef();
 
-    if (inputElement) {
-      inputElement.addEventListener('keydown', handleKeyDown);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleItemSubmit = this.handleItemSubmit.bind(this);
+  }
+
+  componentDidMount() {
+    if (this.inputRef.current) {
+      this.inputRef.current.focus();
     }
+  }
 
-    return () => {
-      if (inputElement) {
-        inputElement.removeEventListener('keydown', handleKeyDown);
-      }
-    };
-  }, [props]);
+  getValue() {
+    console.log('getValue called, returning:', this.state.value);
+    return this.state.value;
+  }
 
-  // Handle item selection from the autocomplete dropdown
-  const handleItemSubmit = (item) => {
-    console.log('Item submitted:', item);
-    setValue(item.value || item);
-    props.stopEditing(); // Inform AG Grid that editing is complete
-  };
+  handleChange(newValue) {
+    this.setState({ value: newValue });
+  }
 
-  return (
-    <Autocomplete
-      inputRef={inputRef}
-      value={value}
-      data={options}
-      onChange={(newValue) => setValue(newValue)}
-      onItemSubmit={handleItemSubmit}
-      placeholder="Type or select"
-      nothingFound="No options"
-      styles={{ input: { width: '100%' } }}
-    />
-  );
-});
+  handleKeyDown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.props.stopEditing();
+    }
+  }
+
+  handleItemSubmit(item) {
+    const newValue = item.value || item;
+    this.setState({ value: newValue }, () => {
+      this.props.stopEditing();
+    });
+  }
+
+  render() {
+    return (
+      <Autocomplete
+        ref={this.inputRef}
+        value={this.state.value}
+        data={this.state.options}
+        onChange={this.handleChange}
+        onItemSubmit={this.handleItemSubmit}
+        placeholder="Type or select"
+        nothingFound="No options"
+        styles={{ input: { width: '100%' } }}
+        onKeyDown={this.handleKeyDown}
+      />
+    );
+  }
+}
 
 export default MantineAutocompleteCellEditor;
