@@ -1,32 +1,45 @@
-https://blog.ag-grid.com/learn-to-customize-react-grid-in-less-than-10-minutes/#custom-cell-editor
+import React, { memo, useEffect, useRef, useState } from 'react';
+import { Autocomplete } from '@mantine/core';
+import { CustomCellEditorProps } from '@ag-grid-community/react';
 
-import React, { Component } from 'react';
+export default memo(({ value, onValueChange, stopEditing }: CustomCellEditorProps) => {
+  const [currentValue, setCurrentValue] = useState(value || '');
+  const inputRef = useRef<HTMLInputElement>(null);
 
-export class NumericCellEditor extends Component {
-    constructor(props) {
-        super(props);
-        this.textInput = React.createRef();
+  useEffect(() => {
+    // Focus the input when the component mounts
+    inputRef.current?.focus();
+  }, []);
+
+  const handleChange = (newValue: string) => {
+    setCurrentValue(newValue);
+    onValueChange(newValue); // Update the grid's value
+  };
+
+  const handleItemSubmit = (item: string) => {
+    setCurrentValue(item);
+    onValueChange(item);
+    stopEditing(); // Finish editing when an item is selected
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      stopEditing(); // Finish editing when Enter is pressed
     }
+  };
 
-    onKeyPress(event) {
-        if (!isNumeric(event.nativeEvent)) {
-            event.preventDefault();
-        }
-
-        function isNumeric(event) {
-            return /\d/.test(event.key);
-        }
-    }
-
-
-    getValue() {
-        return this.textInput.current.value;
-    };
-
-
-    render() {
-        return (
-            <input onKeyPress={this.onKeyPress} ref={this.textInput} defaultValue={this.props.value}/>
-        );
-    }
-}
+  return (
+    <Autocomplete
+      ref={inputRef}
+      value={currentValue}
+      data={['Option1', 'Option2', 'Option3']} // Replace with your options
+      onChange={handleChange}
+      onItemSubmit={handleItemSubmit}
+      onKeyDown={handleKeyDown}
+      placeholder="Type or select"
+      nothingFound="No options"
+      styles={{ input: { width: '100%' } }}
+    />
+  );
+});
