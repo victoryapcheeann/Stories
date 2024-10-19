@@ -1,81 +1,32 @@
-import React, { Component, createRef } from 'react';
-import { Autocomplete } from '@mantine/core';
+https://blog.ag-grid.com/learn-to-customize-react-grid-in-less-than-10-minutes/#custom-cell-editor
 
-class MantineAutocompleteCellEditor extends Component {
-  constructor(props) {
-    super(props);
+import React, { Component } from 'react';
 
-    this.state = {
-      value: props.value || '',
+export class NumericCellEditor extends Component {
+    constructor(props) {
+        super(props);
+        this.textInput = React.createRef();
+    }
+
+    onKeyPress(event) {
+        if (!isNumeric(event.nativeEvent)) {
+            event.preventDefault();
+        }
+
+        function isNumeric(event) {
+            return /\d/.test(event.key);
+        }
+    }
+
+
+    getValue() {
+        return this.textInput.current.value;
     };
 
-    this.inputRef = createRef();
-    this.options = props.values || [];
 
-    // Bind methods
-    this.handleChange = this.handleChange.bind(this);
-    this.handleItemSubmit = this.handleItemSubmit.bind(this);
-    this.handleKeyDown = this.handleKeyDown.bind(this);
-  }
-
-  // AG Grid calls this to get the final value
-  getValue() {
-    console.log('getValue called, returning:', this.state.value);
-    return this.state.value;
-  }
-
-  // Focus the input when the editor is attached to the DOM
-  afterGuiAttached() {
-    if (this.inputRef.current) {
-      this.inputRef.current.focus();
+    render() {
+        return (
+            <input onKeyPress={this.onKeyPress} ref={this.textInput} defaultValue={this.props.value}/>
+        );
     }
-  }
-
-  // Optionally, inform AG Grid that the editor is not a popup
-  isPopup() {
-    return false;
-  }
-
-  handleChange(newValue) {
-    this.setState({ value: newValue });
-  }
-
-  handleItemSubmit(item) {
-    this.setState({ value: item.value || item }, () => {
-      if (this.props.stopEditing) {
-        this.props.stopEditing();
-      } else {
-        console.error('stopEditing not available in props');
-      }
-    });
-  }
-
-  handleKeyDown(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      if (this.props.stopEditing) {
-        this.props.stopEditing();
-      } else {
-        console.error('stopEditing not available in props');
-      }
-    }
-  }
-
-  render() {
-    return (
-      <Autocomplete
-        ref={this.inputRef}
-        value={this.state.value}
-        data={this.options}
-        onChange={this.handleChange}
-        onItemSubmit={this.handleItemSubmit}
-        onKeyDown={this.handleKeyDown}
-        placeholder="Type or select"
-        nothingFound="No options"
-        styles={{ input: { width: '100%' } }}
-      />
-    );
-  }
 }
-
-export default MantineAutocompleteCellEditor;
