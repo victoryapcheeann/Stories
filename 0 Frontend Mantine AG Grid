@@ -1,19 +1,13 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 
-const SimpleInputCellEditor = forwardRef((props, ref) => {
-  const inputRef = useRef(null);
-
+const SimpleEditor = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     getValue() {
-      return inputRef.current.value;
+      return 'New Value';
     },
   }));
 
-  useEffect(() => {
-    inputRef.current.focus();
-  }, []);
-
-  return <input ref={inputRef} defaultValue={props.value} />;
+  return <div>Editing...</div>;
 });
 
-export default SimpleInputCellEditor;
+export default SimpleEditor;
