@@ -1,13 +1,68 @@
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { Component, createRef } from 'react';
+import { Autocomplete } from '@mantine/core';
 
-const SimpleEditor = forwardRef((props, ref) => {
-  useImperativeHandle(ref, () => ({
-    getValue() {
-      return 'New Value';
-    },
-  }));
+class MantineAutocompleteCellEditor extends Component {
+  constructor(props) {
+    super(props);
 
-  return <div>Editing...</div>;
-});
+    this.state = {
+      value: props.value || '',
+    };
 
-export default SimpleEditor;
+    this.inputRef = createRef();
+    this.options = props.values || [];
+
+    // Bind methods
+    this.handleChange = this.handleChange.bind(this);
+    this.handleItemSubmit = this.handleItemSubmit.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+  }
+
+  // AG Grid calls this to get the final value
+  getValue() {
+    console.log('getValue called, returning:', this.state.value);
+    return this.state.value;
+  }
+
+  // Focus the input when the editor is attached to the DOM
+  afterGuiAttached() {
+    if (this.inputRef.current) {
+      this.inputRef.current.focus();
+    }
+  }
+
+  handleChange(newValue) {
+    this.setState({ value: newValue });
+  }
+
+  handleItemSubmit(item) {
+    this.setState({ value: item.value || item }, () => {
+      this.props.api.stopEditing();
+    });
+  }
+
+  handleKeyDown(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.props.api.stopEditing();
+    }
+  }
+
+  render() {
+    return (
+      <Autocomplete
+        ref={this.inputRef}
+        value={this.state.value}
+        data={this.options}
+        onChange={this.handleChange}
+        onItemSubmit={this.handleItemSubmit}
+        onKeyDown={this.handleKeyDown}
+        placeholder="Type or select"
+        nothingFound="No options"
+        styles={{ input: { width: '100%' } }}
+      />
+    );
+  }
+}
+
+export default MantineAutocompleteCellEditor;
