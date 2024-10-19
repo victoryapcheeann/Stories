@@ -1,11 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Autocomplete } from '@mantine/core';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
-const MantineAutocompleteCellEditor = (props) => {
-  const [value, setValue] = useState(props.value || '');
-  const options = props.values || [];
+const SimpleInputCellEditor = forwardRef((props, ref) => {
+  const valueRef = useRef(props.value || '');
   const inputRef = useRef(null);
-  const componentRef = useRef({});
 
   useEffect(() => {
     if (inputRef.current) {
@@ -13,44 +10,29 @@ const MantineAutocompleteCellEditor = (props) => {
     }
   }, []);
 
-  // Assign methods directly to the componentRef.current
-  useEffect(() => {
-    componentRef.current.getValue = () => {
-      console.log('getValue called, returning:', value);
-      return value;
-    };
-  }, [value]);
+  useImperativeHandle(ref, () => ({
+    getValue: () => valueRef.current,
+  }));
 
-  const handleChange = (newValue) => {
-    setValue(newValue);
+  const handleChange = (event) => {
+    valueRef.current = event.target.value;
   };
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      event.preventDefault();
       props.stopEditing();
     }
   };
 
-  const handleItemSubmit = (item) => {
-    const newValue = item.value || item;
-    setValue(newValue);
-    props.stopEditing();
-  };
-
   return (
-    <Autocomplete
+    <input
       ref={inputRef}
-      value={value}
-      data={options}
+      defaultValue={valueRef.current}
       onChange={handleChange}
-      onItemSubmit={handleItemSubmit}
-      placeholder="Type or select"
-      nothingFound="No options"
-      styles={{ input: { width: '100%' } }}
       onKeyDown={handleKeyDown}
+      style={{ width: '100%' }}
     />
   );
-};
+});
 
-export default MantineAutocompleteCellEditor;
+export default SimpleInputCellEditor;
