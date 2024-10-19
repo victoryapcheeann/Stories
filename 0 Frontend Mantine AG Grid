@@ -18,11 +18,26 @@ const MantineAutocompleteCellEditor = forwardRef((props, ref) => {
     },
   }));
 
+  // Handle key presses, particularly the Enter key
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      props.stopEditing(); // Inform AG Grid that editing is complete
+    }
+  };
+
+  // Handle item selection from the autocomplete dropdown
+  const handleItemSubmit = (item) => {
+    setValue(item.value || item);
+    props.stopEditing(); // Inform AG Grid that editing is complete
+  };
+
   return (
     <Autocomplete
       value={value}
       data={options}
       onChange={(newValue) => setValue(newValue)}
+      onKeyDown={handleKeyDown} // Add the onKeyDown handler
+      onItemSubmit={handleItemSubmit} // Add the onItemSubmit handler
       placeholder="Type or select"
       nothingFound="No options"
       styles={{ input: { width: '100%' } }}
