@@ -1,64 +1,56 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Autocomplete } from '@mantine/core';
 
-class MantineAutocompleteCellEditor extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      value: props.value || '',
-      options: props.values || [],
-    };
-    this.inputRef = React.createRef();
+const MantineAutocompleteCellEditor = (props) => {
+  const [value, setValue] = useState(props.value || '');
+  const options = props.values || [];
+  const inputRef = useRef(null);
+  const componentRef = useRef({});
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.handleItemSubmit = this.handleItemSubmit.bind(this);
-  }
-
-  componentDidMount() {
-    if (this.inputRef.current) {
-      this.inputRef.current.focus();
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
-  }
+  }, []);
 
-  getValue() {
-    console.log('getValue called, returning:', this.state.value);
-    return this.state.value;
-  }
+  // Assign methods directly to the componentRef.current
+  useEffect(() => {
+    componentRef.current.getValue = () => {
+      console.log('getValue called, returning:', value);
+      return value;
+    };
+  }, [value]);
 
-  handleChange(newValue) {
-    this.setState({ value: newValue });
-  }
+  const handleChange = (newValue) => {
+    setValue(newValue);
+  };
 
-  handleKeyDown(event) {
+  const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      this.props.stopEditing();
+      props.stopEditing();
     }
-  }
+  };
 
-  handleItemSubmit(item) {
+  const handleItemSubmit = (item) => {
     const newValue = item.value || item;
-    this.setState({ value: newValue }, () => {
-      this.props.stopEditing();
-    });
-  }
+    setValue(newValue);
+    props.stopEditing();
+  };
 
-  render() {
-    return (
-      <Autocomplete
-        ref={this.inputRef}
-        value={this.state.value}
-        data={this.state.options}
-        onChange={this.handleChange}
-        onItemSubmit={this.handleItemSubmit}
-        placeholder="Type or select"
-        nothingFound="No options"
-        styles={{ input: { width: '100%' } }}
-        onKeyDown={this.handleKeyDown}
-      />
-    );
-  }
-}
+  return (
+    <Autocomplete
+      ref={inputRef}
+      value={value}
+      data={options}
+      onChange={handleChange}
+      onItemSubmit={handleItemSubmit}
+      placeholder="Type or select"
+      nothingFound="No options"
+      styles={{ input: { width: '100%' } }}
+      onKeyDown={handleKeyDown}
+    />
+  );
+};
 
 export default MantineAutocompleteCellEditor;
