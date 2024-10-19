@@ -1,31 +1,38 @@
 import { Autocomplete } from '@mantine/core';
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useState, useEffect } from 'react';
 
-// Custom cell editor using Mantine Autocomplete
+// Define the custom Mantine Autocomplete cell editor
 const MantineAutocompleteCellEditor = forwardRef((props, ref) => {
-  // Initialize the state with the current value
+  // State to manage the selected value
   const [value, setValue] = useState(props.value || '');
-  const options = props.values || []; // The options for the Autocomplete
 
   useEffect(() => {
-    // Focus on the input after the component is mounted
+    // Focus on the input when the component is mounted
     const input = document.querySelector('input');
     if (input) input.focus();
   }, []);
 
-  // Use ImperativeHandle to expose AG Grid lifecycle methods
+  // Expose lifecycle methods to AG Grid using useImperativeHandle
   useImperativeHandle(ref, () => ({
-    getValue: () => value, // Return the selected or typed value
+    // This method is called by AG Grid to retrieve the final value
+    getValue: () => {
+      return value;
+    },
+    // Optional: Ensure the input is focused when the editor is attached
+    afterGuiAttached: () => {
+      const input = document.querySelector('input');
+      if (input) input.focus();
+    }
   }));
 
   return (
     <Autocomplete
       value={value}
-      data={options} // Provide the dropdown options
-      onChange={setValue} // Update the value when the user types/selects
+      data={props.values}  // Pass the dropdown options from props
+      onChange={setValue}  // Update the value state when the user types/selects
       placeholder="Type or select"
       nothingFound="No options"
-      styles={{ input: { width: '100%', height: '100%' } }}
+      styles={{ input: { width: '100%' } }}  // Style the input
     />
   );
 });
