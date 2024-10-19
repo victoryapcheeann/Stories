@@ -1,11 +1,13 @@
 import { ICellEditorComp, ICellEditorParams } from '@ag-grid-community/core';
 import React from 'react';
 import { Autocomplete } from '@mantine/core';
+import ReactDOM from 'react-dom/client';
 
 export class MantineAutocompleteEditor implements ICellEditorComp {
-  private gui!: HTMLDivElement; // Container for Mantine Autocomplete
+  private eInput!: HTMLDivElement; // Container for Mantine Autocomplete
   private params!: ICellEditorParams;
   private value!: string;
+  private root!: ReactDOM.Root;  // For unmounting the component
 
   // Initialization method
   init(params: ICellEditorParams) {
@@ -13,11 +15,12 @@ export class MantineAutocompleteEditor implements ICellEditorComp {
     this.value = params.value || '';  // Initialize with the current value
 
     // Create a div element to hold the Autocomplete component
-    this.gui = document.createElement('div');
-    this.gui.classList.add('mantine-autocomplete-editor');
+    this.eInput = document.createElement('div');
+    this.eInput.classList.add('mantine-autocomplete-editor');
 
-    // Render Mantine Autocomplete inside the container
-    React.render(
+    // Render Mantine Autocomplete inside the container using ReactDOM.createRoot
+    this.root = ReactDOM.createRoot(this.eInput);  // Create root for React component
+    this.root.render(
       <Autocomplete
         data={params.options || []}  // Options passed from params
         value={this.value}
@@ -25,14 +28,13 @@ export class MantineAutocompleteEditor implements ICellEditorComp {
         placeholder="Type or select"
         nothingFound="No options"
         styles={{ input: { width: '100%' } }}  // Full width styling
-      />,
-      this.gui
+      />
     );
   }
 
   // Return the GUI element (the div holding the Autocomplete component)
   getGui(): HTMLElement {
-    return this.gui;
+    return this.eInput;
   }
 
   // Return the final value
@@ -42,9 +44,16 @@ export class MantineAutocompleteEditor implements ICellEditorComp {
 
   // Focus on the input when the component is attached to the DOM
   afterGuiAttached() {
-    const inputElement = this.gui.querySelector('input');
+    const inputElement = this.eInput.querySelector('input');
     if (inputElement) {
       inputElement.focus();
+    }
+  }
+
+  // Clean up when the editor is destroyed
+  destroy() {
+    if (this.root) {
+      this.root.unmount();  // Unmount the React component
     }
   }
 }
