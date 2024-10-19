@@ -31,20 +31,33 @@ class MantineAutocompleteCellEditor extends Component {
     }
   }
 
+  // Optionally, inform AG Grid that the editor is not a popup
+  isPopup() {
+    return false;
+  }
+
   handleChange(newValue) {
     this.setState({ value: newValue });
   }
 
   handleItemSubmit(item) {
     this.setState({ value: item.value || item }, () => {
-      this.props.api.stopEditing();
+      if (this.props.stopEditing) {
+        this.props.stopEditing();
+      } else {
+        console.error('stopEditing not available in props');
+      }
     });
   }
 
   handleKeyDown(event) {
     if (event.key === 'Enter') {
       event.preventDefault();
-      this.props.api.stopEditing();
+      if (this.props.stopEditing) {
+        this.props.stopEditing();
+      } else {
+        console.error('stopEditing not available in props');
+      }
     }
   }
 
