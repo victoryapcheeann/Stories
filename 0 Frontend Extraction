@@ -1,0 +1,29 @@
+If you want to extract only specific values from each dictionary, you can specify the keys you are interested in and then extract the corresponding values. Here's how you can do that:
+
+```python
+# Sample list of dictionaries
+list_of_dicts = [
+    {'name': 'Alice', 'age': 25, 'city': 'New York'},
+    {'name': 'Bob', 'age': 30, 'city': 'Los Angeles'},
+    {'name': 'Charlie', 'age': 35, 'city': 'Chicago'}
+]
+
+# Specify the keys you want to extract
+keys_to_extract = ['name', 'city']
+
+# Extract specific values from each dictionary
+list_of_specific_values = [[d[key] for key in keys_to_extract] for d in list_of_dicts]
+
+# Output the result
+print(list_of_specific_values)
+```
+
+In this example, only the values for the keys `'name'` and `'city'` will be extracted from each dictionary.
+
+The output will look like this:
+
+```
+[['Alice', 'New York'], ['Bob', 'Los Angeles'], ['Charlie', 'Chicago']]
+```
+
+This approach allows you to control which specific keys' values you want to extract.
