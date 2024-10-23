@@ -1,0 +1,177 @@
+In AG Grid, you can get the current set of applied filters by using the `api.getFilterModel()` method. This will return an object representing the filters applied to the grid. You can then send this filter data to the backend using an HTTP request, typically via `fetch`, `axios`, or any other HTTP client library.
+
+Here's a step-by-step guide on how to do it:
+
+### 1. **Get the Filter Model in AG Grid**
+The `api.getFilterModel()` function retrieves the current filter model applied to the grid. You can trigger this whenever necessary, such as on a button click, or when a filter changes.
+
+```javascript
+// Function to get the current filter model
+function getCurrentFilters() {
+    const filterModel = gridOptions.api.getFilterModel();
+    console.log(filterModel); // View the filters in the console
+    return filterModel;
+}
+```
+
+### 2. **Send Filter Data to Backend**
+You can send this filter data to your backend using `fetch` or any HTTP client of your choice. Here’s an example using `fetch`.
+
+```javascript
+function sendFiltersToBackend() {
+    const filterModel = getCurrentFilters();
+
+    // Assuming your backend API expects a POST request with the filter data
+    fetch('/filter_data/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            filterModel: filterModel,
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Filtered data from server:', data);
+        // Optionally, update the grid with the returned data
+        gridOptions.api.setRowData(data.data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+```
+
+### 3. **AG Grid Event to Automatically Trigger Backend Call**
+If you want to automatically send the filters whenever a filter changes, you can listen to the `filterChanged` event in AG Grid. Here’s how:
+
+```javascript
+const gridOptions = {
+    columnDefs: [/* your column definitions here */],
+    onFilterChanged: function(event) {
+        sendFiltersToBackend();
+    }
+};
+```
+
+### 4. **Backend Endpoint to Handle Filters**
+On the backend (FastAPI example), you can then receive the filters and apply them to your database query.
+
+```python
+from fastapi import FastAPI, Request
+from sqlalchemy.orm import Session
+
+app = FastAPI()
+
+@app.post("/filter_data/")
+async def filter_data(request: Request, db: Session):
+    body = await request.json()
+    filters = body.get('filterModel', {})
+
+    query = db.query(Model)
+
+    # Apply filters dynamically based on the filter model received from AG Grid
+    for column, filter_details in filters.items():
+        filter_value = filter_details.get('filter', None)
+        if column in filter_map:
+            query = filter_map[column](query, filter_value)
+
+    # Execute the query and return filtered results
+    results = query.all()
+    return {"data": [result.to_dict() for result in results]}
+```
+
+### 5. **Sample Filter Model Structure**
+The filter model sent from AG Grid is typically structured like this:
+
+```json
+{
+    "age": {
+        "filterType": "number",
+        "type": "greaterThan",
+        "filter": 25
+    },
+    "name": {
+        "filterType": "text",
+        "type": "contains",
+        "filter": "John"
+    }
+}
+```
+
+This filter model contains the column name (e.g., `age`, `name`), the type of filter, and the filter value. The structure will depend on the type of filter you apply in AG Grid.
+
+By sending the `filterModel` to the backend, you can apply these filters in your SQL query or ORM code and return the filtered results to the frontend.
+
+
+
+
+
+To handle server-side filtering in AG Grid with FastAPI, you can streamline the process of determining which column to filter without relying heavily on `if-else` conditions. A more scalable and maintainable method is to use a dynamic approach such as a dictionary or mapping function to map column names to corresponding filter logic.
+
+Here’s how you can implement it:
+
+### 1. **Create a Dictionary for Column-Filter Mapping**
+
+Instead of using `if-else` conditions, you can map column names to filter functions or filter logic.
+
+```python
+# Define a dictionary where keys are column names and values are filter functions or SQLAlchemy filters.
+filter_map = {
+    'name': lambda query, value: query.filter(Model.name.ilike(f'%{value}%')),
+    'age': lambda query, value: query.filter(Model.age == value),
+    'city': lambda query, value: query.filter(Model.city.ilike(f'%{value}%'))
+}
+```
+
+### 2. **Extract Filter Information from AG Grid Request**
+
+AG Grid sends filter data in the request payload under `filterModel`. You need to extract the column names and their respective filter values.
+
+```python
+from fastapi import FastAPI, Request
+from sqlalchemy.orm import Session
+
+app = FastAPI()
+
+@app.post("/filter_data/")
+async def filter_data(request: Request, db: Session):
+    body = await request.json()
+    filters = body.get('filterModel', {})
+
+    query = db.query(Model)
+
+    # Apply filters dynamically using the filter_map
+    for column, filter_details in filters.items():
+        filter_value = filter_details.get('filter', None)
+        if column in filter_map:
+            query = filter_map[column](query, filter_value)
+
+    # Execute the query and return filtered results
+    results = query.all()
+    return {"data": [result.to_dict() for result in results]}
+```
+
+### 3. **Adjust for Complex Filter Logic**
+
+If you have more complex filter types (e.g., ranges, set filters), you can extend the dictionary to handle different filter conditions dynamically.
+
+```python
+filter_map = {
+    'name': lambda query, value: query.filter(Model.name.ilike(f'%{value}%')),
+    'age': lambda query, filter_details: query.filter(
+        Model.age.between(filter_details.get('filter'), filter_details.get('filterTo'))),
+    'status': lambda query, filter_details: query.filter(Model.status.in_(filter_details['values']))
+}
+```
+
+### 4. **Handling Multiple Filters at Once**
+
+AG Grid can send multiple filters, so you can iterate over the filters and apply each one dynamically based on the column.
+
+### 5. **Consider SQLAlchemy ORM or Raw SQL**
+
+If you’re using SQLAlchemy ORM, you can directly apply these filters as shown. If you're using raw SQL, you can dynamically build the `WHERE` clause using a similar approach.
+
+This method improves flexibility and scalability, as adding new filters or columns only requires updating the `filter_map` dictionary instead of modifying long `if-else` chains.
