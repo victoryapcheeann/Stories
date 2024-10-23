@@ -1,4 +1,4 @@
-To implement server-side pagination with AG Grid and a backend like FastAPI, you'll need to handle pagination by sending requests to the server with pagination parameters (such as page number, page size) and receiving paginated data from the server.
+⁷To implement server-side pagination with AG Grid and a backend like FastAPI, you'll need to handle pagination by sending requests to the server with pagination parameters (such as page number, page size) and receiving paginated data from the server.
 
 Here’s a guide to implementing server-side pagination with AG Grid and FastAPI:
 
@@ -120,4 +120,125 @@ Your backend should return data in the following format:
 ### 6. **Performance Considerations**
 For large datasets, ensure that you have proper indexes on the database columns used for filtering, sorting, and pagination. Additionally, depending on the size of your dataset, you may want to consider more advanced optimizations like caching.
 
-This approach efficiently handles server-side pagination, allowing AG Grid to request only the needed data for each page from the server, keeping performance optimal.
+This approach efficie⁸ntly handles server-side pagination, allowing AG Grid to request only the needed data for each page from the server, keeping performance optimal.
+
+
+
+If you're adding filtering to AG Grid with server-side pagination, the process involves modifying your backend API to handle filters, as well as your frontend to send filtering parameters along with the pagination request. Here's how you can achieve this:
+
+### Steps to Implement Server-Side Pagination and Filtering:
+
+#### 1. **Modify Backend to Support Filtering**:
+Your backend API should accept filtering parameters. These parameters typically include the column field, filter type (e.g., contains, equals), and the filter value. Modify the backend logic to query the database accordingly based on the filtering rules.
+
+For example, if you’re using Node.js with Express, your API might look like this:
+
+```javascript
+app.get('/api/data', async (req, res) => {
+  const { page, size, filterModel } = req.query;
+
+  let query = 'SELECT * FROM data_table WHERE 1=1';
+
+  // Example of building filter query
+  if (filterModel) {
+    const filters = JSON.parse(filterModel);
+    Object.keys(filters).forEach((column) => {
+      const filter = filters[column];
+      if (filter.filterType === 'text') {
+        query += ` AND ${column} LIKE '%${filter.filter}%'`;
+      }
+      // Handle other filter types like number, date, etc.
+    });
+  }
+
+  // Add pagination
+  const offset = (page - 1) * size;
+  query += ` LIMIT ${size} OFFSET ${offset}`;
+
+  // Execute query
+  const result = await database.query(query);
+  res.json(result);
+});
+```
+
+#### 2. **Configure AG Grid for Server-Side Filtering**:
+
+You’ll need to enable server-side filtering in AG Grid by setting up `datasource` with filter logic in the grid options.
+
+Here’s how you configure AG Grid to send filter information to the backend:
+
+```javascript
+const gridOptions = {
+  columnDefs: [
+    { field: 'name', filter: 'agTextColumnFilter' },
+    { field: 'age', filter: 'agNumberColumnFilter' },
+    // Other columns...
+  ],
+  pagination: true,
+  paginationPageSize: 10,
+  cacheBlockSize: 10,
+  enableServerSideSorting: true,
+  enableServerSideFilter: true,
+  serverSideDatasource: datasource
+};
+
+// Define datasource to handle server-side pagination and filtering
+const datasource = {
+  getRows: (params) => {
+    // Extract filterModel and pagination info
+    const { startRow, endRow, filterModel } = params.request;
+    const page = startRow / gridOptions.paginationPageSize + 1;
+
+    // Call backend with filters and pagination
+    fetch(`/api/data?page=${page}&size=${gridOptions.paginationPageSize}&filterModel=${JSON.stringify(filterModel)}`)
+      .then((response) => response.json())
+      .then((data) => {
+        // Supply AG Grid with rows and total count for pagination
+        params.successCallback(data.rows, data.totalCount);
+      })
+      .catch((error) => {
+        // Handle error
+        params.failCallback();
+      });
+  },
+};
+
+// Set the grid data source
+gridOptions.api.setServerSideDatasource(datasource);
+```
+
+### Key Points:
+
+1. **Backend**:
+   - It should handle pagination (`LIMIT` and `OFFSET`).
+   - It should parse filter data (`filterModel`) and query the database accordingly.
+
+2. **Frontend (AG Grid)**:
+   - AG Grid will automatically send the `filterModel` to the datasource when a filter is applied.
+   - The `datasource.getRows` function is responsible for making an API call with pagination and filter data.
+   - AG Grid expects two things from the API: a list of rows and a total count for proper pagination display.
+
+### Example of `filterModel` structure:
+When a user applies a filter, AG Grid sends the `filterModel` with a structure like this:
+
+```json
+{
+  "name": {
+    "filterType": "text",
+    "type": "contains",
+    "filter": "John"
+  },
+  "age": {
+    "filterType": "number",
+    "type": "greaterThan",
+    "filter": 25
+  }
+}
+```
+
+- Each key represents the column being filtered.
+- `filterType` specifies the type of filter (text, number, etc.).
+- `filter` is the value being filtered by.
+- `type` indicates the filtering operation (equals, contains, greaterThan, etc.).
+
+By implementing the server-side filtering logic, the grid will make requests with filtering parameters every time a filter is applied, ensuring that only the filtered data is fetched from the backend.
