@@ -1,0 +1,123 @@
+To implement server-side pagination with AG Grid and a backend like FastAPI, you'll need to handle pagination by sending requests to the server with pagination parameters (such as page number, page size) and receiving paginated data from the server.
+
+Here’s a guide to implementing server-side pagination with AG Grid and FastAPI:
+
+### 1. **AG Grid Configuration for Server-Side Pagination**
+
+You need to configure AG Grid to use server-side pagination by setting the `datasource` property, which defines how data is fetched from the server, and enables pagination.
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'name' },
+        { field: 'age' },
+        { field: 'city' }
+    ],
+    rowModelType: 'infinite',  // Set row model type to 'infinite' for server-side pagination
+    pagination: true,          // Enable pagination
+    paginationPageSize: 20,    // Number of rows per page
+
+    datasource: {
+        getRows: function(params) {
+            console.log(params); // Check the params sent by AG Grid
+
+            // Extract pagination parameters
+            const startRow = params.startRow;
+            const endRow = params.endRow;
+            const pageSize = params.endRow - params.startRow;
+            const currentPage = Math.floor(startRow / pageSize) + 1;
+
+            // Send pagination request to the server
+            fetch(`/get_paginated_data/?page=${currentPage}&size=${pageSize}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Call the success callback and pass the data and total row count
+                    params.successCallback(data.rows, data.totalCount);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    params.failCallback();
+                });
+        }
+    }
+};
+
+// Create the grid passing in the gridOptions
+const gridDiv = document.querySelector('#myGrid');
+new agGrid.Grid(gridDiv, gridOptions);
+```
+
+### 2. **Backend (FastAPI) to Handle Paginated Requests**
+
+In your FastAPI backend, you will create an endpoint to handle the paginated requests. You need to send the page number and page size in the request and respond with the relevant paginated data and the total count of rows.
+
+Here’s an example of how to implement the FastAPI backend:
+
+```python
+from fastapi import FastAPI, Query
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import List
+
+app = FastAPI()
+
+class RowData(BaseModel):
+    name: str
+    age: int
+    city: str
+
+@app.get("/get_paginated_data/")
+def get_paginated_data(page: int = Query(1), size: int = Query(20), db: Session = Depends(get_db)):
+    # Calculate offset and limit based on page and size
+    offset = (page - 1) * size
+    limit = size
+
+    # Query total row count
+    total_count = db.query(Model).count()
+
+    # Query paginated data
+    rows = db.query(Model).offset(offset).limit(limit).all()
+
+    # Return paginated data and total row count
+    return {
+        "rows": [row.to_dict() for row in rows],
+        "totalCount": total_count
+    }
+```
+
+### 3. **Key Parts of the Code**
+
+#### 3.1 **Frontend (AG Grid)**
+- `rowModelType: 'infinite'`: This enables server-side pagination in AG Grid.
+- `datasource.getRows`: This function is called whenever AG Grid needs to fetch a new page of data. It uses the `params.startRow` and `params.endRow` values to send the correct pagination request to the server.
+- `params.successCallback(data.rows, data.totalCount)`: Once the data is fetched from the server, this function updates the grid with the rows and the total number of rows (`totalCount`).
+
+#### 3.2 **Backend (FastAPI)**
+- `page` and `size`: These query parameters are passed from the frontend to indicate the current page and page size.
+- `offset = (page - 1) * size`: The offset is calculated to fetch the correct rows for the current page.
+- `db.query(Model).offset(offset).limit(limit)`: This queries the database for the required page of data.
+
+### 4. **AG Grid Parameters**
+AG Grid automatically handles the following:
+- **`startRow`**: The index of the first row in the current page.
+- **`endRow`**: The index of the last row in the current page.
+  
+These parameters are used to calculate which page and how many rows to request from the server.
+
+### 5. **Backend Response Format**
+Your backend should return data in the following format:
+```json
+{
+    "rows": [
+        { "name": "John", "age": 25, "city": "New York" },
+        { "name": "Jane", "age": 30, "city": "San Francisco" }
+        // more rows
+    ],
+    "totalCount": 1000  // Total number of rows in the dataset (for pagination)
+}
+```
+
+### 6. **Performance Considerations**
+For large datasets, ensure that you have proper indexes on the database columns used for filtering, sorting, and pagination. Additionally, depending on the size of your dataset, you may want to consider more advanced optimizations like caching.
+
+This approach efficiently handles server-side pagination, allowing AG Grid to request only the needed data for each page from the server, keeping performance optimal.
