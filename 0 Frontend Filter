@@ -1,3 +1,179 @@
+To implement pagination in React using AG Grid with backend support, follow these steps:
+
+1. **Set Up AG Grid:**
+   Install `ag-grid-react` and `ag-grid-community`:
+
+   ```bash
+   npm install ag-grid-react ag-grid-community
+   ```
+
+2. **React Component with AG Grid:**
+   Create a component with AG Grid to fetch paginated data from the backend.
+
+   ```jsx
+   import React, { useState, useEffect, useCallback } from 'react';
+   import { AgGridReact } from 'ag-grid-react';
+   import 'ag-grid-community/styles/ag-grid.css';
+   import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+   const PaginatedGrid = () => {
+     const [rowData, setRowData] = useState([]);
+     const [currentPage, setCurrentPage] = useState(1);
+     const [pageSize] = useState(10);
+     const [totalRows, setTotalRows] = useState(0);
+     const [loading, setLoading] = useState(false);
+
+     // Columns definition for the grid
+     const columnDefs = [
+       { headerName: 'ID', field: 'id' },
+       { headerName: 'Name', field: 'name' },
+       { headerName: 'Age', field: 'age' },
+     ];
+
+     // Function to fetch paginated data from backend
+     const fetchData = useCallback(async () => {
+       setLoading(true);
+       try {
+         const response = await fetch(
+           `/api/data?page=${currentPage}&size=${pageSize}`
+         );
+         const data = await response.json();
+         setRowData(data.items); // Assuming data.items contains the paginated data
+         setTotalRows(data.total); // Assuming data.total contains the total count of rows
+       } catch (error) {
+         console.error('Error fetching data:', error);
+       } finally {
+         setLoading(false);
+       }
+     }, [currentPage, pageSize]);
+
+     useEffect(() => {
+       fetchData();
+     }, [fetchData]);
+
+     // AG Grid properties
+     const onGridReady = params => {
+       params.api.sizeColumnsToFit();
+     };
+
+     // Handling pagination change
+     const handlePageChange = newPage => {
+       setCurrentPage(newPage);
+     };
+
+     return (
+       <div className="ag-theme-alpine" style={{ height: 400, width: '100%' }}>
+         <AgGridReact
+           columnDefs={columnDefs}
+           rowData={rowData}
+           onGridReady={onGridReady}
+           pagination={true}
+           paginationPageSize={pageSize}
+           rowModelType="infinite"
+           cacheBlockSize={pageSize}
+           maxBlocksInCache={5}
+           suppressPaginationPanel={true} // Hide default pagination panel
+         />
+         <div>
+           <button
+             onClick={() => handlePageChange(currentPage - 1)}
+             disabled={currentPage === 1}
+           >
+             Previous
+           </button>
+           <span>
+             Page {currentPage} of {Math.ceil(totalRows / pageSize)}
+           </span>
+           <button
+             onClick={() => handlePageChange(currentPage + 1)}
+             disabled={currentPage >= Math.ceil(totalRows / pageSize)}
+           >
+             Next
+           </button>
+         </div>
+         {loading && <p>Loading...</p>}
+       </div>
+     );
+   };
+
+   export default PaginatedGrid;
+   ```
+
+3. **Backend Endpoint Example:**
+   The backend should have an API endpoint that returns paginated data. For example, using FastAPI:
+
+   ```python
+   from fastapi import FastAPI, Depends
+   from typing import List
+   from pydantic import BaseModel
+
+   app = FastAPI()
+
+   # Sample data
+   DATA = [{'id': i, 'name': f'User {i}', 'age': 20 + (i % 10)} for i in range(1, 101)]
+
+   class PaginatedResponse(BaseModel):
+       items: List[dict]
+       total: int
+
+   @app.get('/api/data', response_model=PaginatedResponse)
+   def get_paginated_data(page: int = 1, size: int = 10):
+       start = (page - 1) * size
+       end = start + size
+       items = DATA[start:end]
+       total = len(DATA)
+       return {'items': items, 'total': total}
+   ```
+
+4. **Explanation:**
+   - The React component manages pagination state (`currentPage`, `pageSize`, `totalRows`).
+   - The `fetchData` function retrieves paginated data from the backend.
+   - The backend returns both the paginated items and the total number of rows.
+   - The component displays navigation buttons to change pages and updates the grid accordingly.
+   - The AG Grid is set up with infinite row model properties to support paginated data.
+
+This setup enables efficient pagination with AG Grid, retrieving only the needed data from the server.
+
+Yes, providing the total number of rows is important for pagination, especially if you want to allow users to jump to the last row or navigate to a specific page in AG Grid. The total number of rows lets the frontend calculate the total number of pages and display pagination controls accurately.
+
+In FastAPI, when implementing pagination, you can return the data along with metadata that includes the total number of rows. A typical response might look like this:
+
+```python
+from fastapi import FastAPI, Query
+from typing import List, Dict
+
+app = FastAPI()
+
+@app.get("/items/")
+def get_items(page: int = 1, page_size: int = 10) -> Dict:
+    # Example data
+    items = [{"id": i, "name": f"Item {i}"} for i in range(1, 101)]
+
+    # Calculate start and end indices
+    start = (page - 1) * page_size
+    end = start + page_size
+
+    # Paginate the items
+    paginated_items = items[start:end]
+    total_count = len(items)
+
+    return {
+        "items": paginated_items,
+        "total": total_count,
+        "page": page,
+        "page_size": page_size
+    }
+```
+
+In this example, the response includes the paginated data along with `total`, which represents the total number of items, allowing the frontend to manage pagination efficiently. This information can be used to enable features like jumping to the last page or displaying the total number of pages in AG Grid.
+
+
+
+
+
+
+
+
 In AG Grid, you can get the current set of applied filters by using the `api.getFilterModel()` method. This will return an object representing the filters applied to the grid. You can then send this filter data to the backend using an HTTP request, typically via `fetch`, `axios`, or any other HTTP client library.
 
 Here's a step-by-step guide on how to do it:
