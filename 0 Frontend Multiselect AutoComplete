@@ -1,29 +1,110 @@
 import { useState } from 'react';
-import { MultiSelect } from '@mantine/core';
+import { CheckIcon, Combobox, Group, Pill, PillsInput, useCombobox } from '@mantine/core';
 
-function MultiSelectWithFreeText() {
-  const [data, setData] = useState<string[]>(['React', 'Angular', 'Vue', 'Svelte']);
-  const [value, setValue] = useState<string[]>([]);
-
-  const handleCreate = (query: string) => {
-    const item = query;
-    setData((current) => [...current, item]);
-    return item;
-  };
-
-  return (
-    <MultiSelect
-      label="Select technologies or add your own"
-      data={data}
-      value={value}
-      onChange={setValue}
-      searchable
-      creatable
-      getCreateLabel={(query) => `+ Create "${query}"`} // Custom label for creating new options
-      onCreate={handleCreate} // Adds new options to the list
-      placeholder="Pick or add technologies"
-    />
-  );
+interface MultiSelectCreatableProps {
+  label: string;
+  placeholder: string;
+  data: string[];
+  style?: React.CSSProperties;
+  getInputProps: ReturnType<typeof useForm>['getInputProps']; // Passing the handler
 }
 
-export default MultiSelectWithFreeText;
+export function MultiSelectCreatable({
+  label,
+  placeholder,
+  data: initialData,
+  style,
+  getInputProps,
+}: MultiSelectCreatableProps) {
+  const combobox = useCombobox({
+    onDropdownClose: () => combobox.resetSelectedOption(),
+    onDropdownOpen: () => combobox.updateSelectedOptionIndex('active'),
+  });
+
+  const [search, setSearch] = useState('');
+  const [data, setData] = useState(initialData);
+  const [value, setValue] = useState<string[]>([]);
+
+  const exactOptionMatch = data.some((item) => item === search);
+
+  const handleValueSelect = (val: string) => {
+    setSearch('');
+
+    if (val === '$create') {
+      setData((current) => [...current, search]);
+      setValue((current) => [...current, search]);
+    } else {
+      setValue((current) =>
+        current.includes(val) ? current.filter((v) => v !== val) : [...current, val]
+      );
+    }
+  };
+
+  const handleValueRemove = (val: string) =>
+    setValue((current) => current.filter((v) => v !== val));
+
+  const values = value.map((item) => (
+    <Pill key={item} withRemoveButton onRemove={() => handleValueRemove(item)}>
+      {item}
+    </Pill>
+  ));
+
+  const options = data
+    .filter((item) => item.toLowerCase().includes(search.trim().toLowerCase()))
+    .map((item) => (
+      <Combobox.Option value={item} key={item} active={value.includes(item)}>
+        <Group gap="sm">
+          {value.includes(item) ? <CheckIcon size={12} /> : null}
+          <span>{item}</span>
+        </Group>
+      </Combobox.Option>
+    ));
+
+  return (
+    <div style={style}>
+      <label>{label}</label>
+      <Combobox store={combobox} onOptionSubmit={handleValueSelect} withinPortal={false}>
+        <Combobox.DropdownTarget>
+          <PillsInput onClick={() => combobox.openDropdown()}>
+            <Pill.Group>
+              {values}
+
+              <Combobox.EventsTarget>
+                <PillsInput.Field
+                  {...getInputProps('inputFieldName')} // Pass the getInputProps handler
+                  onFocus={() => combobox.openDropdown()}
+                  onBlur={() => combobox.closeDropdown()}
+                  value={search}
+                  placeholder={placeholder}
+                  onChange={(event) => {
+                    combobox.updateSelectedOptionIndex();
+                    setSearch(event.currentTarget.value);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Backspace' && search.length === 0 && value.length > 0) {
+                      handleValueRemove(value[value.length - 1]);
+                    }
+                  }}
+                />
+              </Combobox.EventsTarget>
+            </Pill.Group>
+          </PillsInput>
+        </Combobox.DropdownTarget>
+
+        <Combobox.Dropdown>
+          <Combobox.Options>
+            {options}
+
+            {!exactOptionMatch && search.trim().length > 0 && (
+              <Combobox.Option value="$create">+ Create {search}</Combobox.Option>
+            )}
+
+            {exactOptionMatch && search.trim().length > 0 && options.length === 0 && (
+              <Combobox.Empty>Nothing found</Combobox.Empty>
+            )}
+          </Combobox.Options>
+        </Combobox.Dropdown>
+      </Combobox>
+    </div>
+  );
+}
