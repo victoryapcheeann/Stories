@@ -1,0 +1,49 @@
+import { useState } from 'react';
+import { Autocomplete, Badge, Group } from '@mantine/core';
+
+interface MultiInputAutocompleteProps {
+  data: string[];
+}
+
+const MultiInputAutocomplete: React.FC<MultiInputAutocompleteProps> = ({ data }) => {
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState<string>('');
+
+  const handleSelect = (value: string) => {
+    if (!selectedValues.includes(value)) {
+      setSelectedValues((current) => [...current, value]);
+    }
+    setInputValue(''); // Clear input after selecting
+  };
+
+  const handleDelete = (valueToDelete: string) => {
+    setSelectedValues((current) =>
+      current.filter((value) => value !== valueToDelete)
+    );
+  };
+
+  return (
+    <div>
+      <Autocomplete
+        label="Select multiple items"
+        placeholder="Type to search"
+        data={data}
+        value={inputValue}
+        onChange={setInputValue}
+        onItemSubmit={(item) => handleSelect(item.value)} // item.value for TypeScript typing
+      />
+      <Group mt="sm" spacing="xs">
+        {selectedValues.map((value) => (
+          <Badge
+            key={value}
+            rightSection={<span style={{ cursor: 'pointer' }} onClick={() => handleDelete(value)}>x</span>}
+          >
+            {value}
+          </Badge>
+        ))}
+      </Group>
+    </div>
+  );
+};
+
+export default MultiInputAutocomplete;
