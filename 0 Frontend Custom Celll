@@ -1,103 +1,89 @@
-import { useState, useEffect } from 'react';
-import { CheckIcon, Combobox, Group, useCombobox } from '@mantine/core';
+import React, { useState, useEffect } from 'react';
+import { Combobox, InputBase, useCombobox } from '@mantine/core';
 
-export function SelectCreatable({ dataList, value, onValueChange }) {
+interface SelectCreatableProps {
+  dataList: string[];
+  value: string;
+  onValueChange: (value: string) => void;
+}
+
+export function SelectCreatable({ dataList, value, onValueChange }: SelectCreatableProps) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
-    onDropdownOpen: () => combobox.updateSelectedOptionIndex('active'),
   });
 
-  const [search, setSearch] = useState('');
-  const [optionsData, setOptionsData] = useState(dataList || []);
+  const [data, setData] = useState<string[]>(dataList);
+  const [search, setSearch] = useState<string>(value);
 
-  // Update optionsData when dataList prop changes
   useEffect(() => {
-    setOptionsData(dataList || []);
+    setData(dataList);
   }, [dataList]);
 
-  const exactOptionMatch = optionsData.some((item) => item === search);
+  useEffect(() => {
+    setSearch(value);
+  }, [value]);
 
-  const handleValueSelect = (val) => {
-    setSearch('');
+  const exactOptionMatch = data.includes(search);
+  const filteredOptions = exactOptionMatch
+    ? data
+    : data.filter((item) =>
+        item.toLowerCase().includes(search.toLowerCase().trim())
+      );
 
+  const options = filteredOptions.map((item) => (
+    <Combobox.Option value={item} key={item}>
+      {item}
+    </Combobox.Option>
+  ));
+
+  const handleOptionSubmit = (val: string) => {
     if (val === '$create') {
-      setOptionsData((current) => [...current, search]);
+      const newData = [...data, search];
+      setData(newData);
       onValueChange(search);
     } else {
       onValueChange(val);
     }
+    combobox.closeDropdown();
   };
 
-  const filteredOptions = optionsData
-    .filter((item) => item.toLowerCase().includes(search.trim().toLowerCase()))
-    .map((item) => (
-      <Combobox.Option value={item} key={item} active={value === item}>
-        <Group gap="sm">
-          {value === item ? <CheckIcon size={12} /> : null}
-          <span>{item}</span>
-        </Group>
-      </Combobox.Option>
-    ));
-
   return (
-    <Combobox store={combobox} onOptionSubmit={handleValueSelect} withinPortal={false}>
-      <Combobox.DropdownTarget>
-        <Combobox.EventsTarget>
-          <Combobox.Input
-            onFocus={() => combobox.openDropdown()}
-            onBlur={() => combobox.closeDropdown()}
-            value={search || value || ''}
-            placeholder="Select or create an option"
-            onChange={(event) => {
-              combobox.updateSelectedOptionIndex();
-              setSearch(event.currentTarget.value);
-            }}
-          />
-        </Combobox.EventsTarget>
-      </Combobox.DropdownTarget>
+    <Combobox
+      store={combobox}
+      withinPortal={false}
+      onOptionSubmit={handleOptionSubmit}
+    >
+      <Combobox.Target>
+        <InputBase
+          rightSection={<Combobox.Chevron />}
+          value={search}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            const inputValue = event.currentTarget.value;
+            setSearch(inputValue);
+            combobox.openDropdown();
+            combobox.updateSelectedOptionIndex();
+          }}
+          onClick={() => combobox.openDropdown()}
+          onFocus={() => combobox.openDropdown()}
+          onBlur={() => {
+            combobox.closeDropdown();
+            setSearch(value);
+          }}
+          placeholder="Search value"
+          rightSectionPointerEvents="none"
+        />
+      </Combobox.Target>
 
       <Combobox.Dropdown>
         <Combobox.Options>
-          {filteredOptions}
-
+          {options}
           {!exactOptionMatch && search.trim().length > 0 && (
-            <Combobox.Option value="$create">+ Create "{search}"</Combobox.Option>
-          )}
-
-          {exactOptionMatch && search.trim().length > 0 && filteredOptions.length === 0 && (
-            <Combobox.Empty>Nothing found</Combobox.Empty>
+            <Combobox.Option value="$create">
+              + Create {search}
+            </Combobox.Option>
           )}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
   );
 }
-
-
-import React, { memo, useState } from 'react';
-import { useDropdownContext } from '../../context/DropdownValueContext';
-import { SelectCreatable } from './SelectCreatable';
-
-export default memo(({ value, onValueChange, stopEditing }) => {
-  const [currentValue, setCurrentValue] = useState(value || '');
-  const { applicationNameList, setApplicationNameList, setCurrentApplicationName } = useDropdownContext();
-
-  const handleChange = (newValue) => {
-    setCurrentApplicationName(newValue);
-    setCurrentValue(newValue);
-    onValueChange(newValue);
-  };
-
-  const handleCreateOption = (newOption) => {
-    setApplicationNameList((prevList) => [...prevList, newOption]);
-  };
-
-  return (
-    <SelectCreatable
-      dataList={applicationNameList}
-      value={currentValue}
-      onValueChange={handleChange}
-      onCreateOption={handleCreateOption}
-    />
-  );
-});
