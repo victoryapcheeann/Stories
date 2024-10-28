@@ -1,67 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Combobox, InputBase, useCombobox } from '@mantine/core';
 
 interface SelectCreatableProps {
-  dataList: string[];
-  value: string[];
-  onValueChange: (value: string[]) => void;
+  value: string;
+  onValueChange: (value: string) => void;
 }
 
-export function SelectCreatable({
-  dataList,
-  value,
-  onValueChange,
-}: SelectCreatableProps) {
+export function SelectCreatable({ value, onValueChange }: SelectCreatableProps) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
-  const [data, setData] = useState<string[]>(dataList);
-  const [search, setSearch] = useState<string>('');
+  const groceries = [
+    '🍎 Apples',
+    '🍌 Bananas',
+    '🥦 Broccoli',
+    '🥕 Carrots',
+    '🍫 Chocolate',
+    '🍇 Grapes',
+  ];
 
-  useEffect(() => {
-    setData(dataList);
-  }, [dataList]);
+  const [data, setData] = useState<string[]>(groceries);
+  const [search, setSearch] = useState<string>(value || '');
 
-  const filteredOptions = data.filter((item) =>
-    item.toLowerCase().includes(search.toLowerCase().trim())
-  );
+  const exactOptionMatch = data.some((item) => item === search);
+  const filteredOptions = exactOptionMatch
+    ? data
+    : data.filter((item) =>
+        item.toLowerCase().includes(search.toLowerCase().trim())
+      );
 
   const options = filteredOptions.map((item) => (
     <Combobox.Option value={item} key={item}>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <input
-          type="checkbox"
-          checked={value.includes(item)}
-          readOnly
-          style={{ marginRight: 8 }}
-        />
-        {item}
-      </div>
+      {item}
     </Combobox.Option>
   ));
 
-  const handleOptionSubmit = (selectedItem: string) => {
-    if (selectedItem === '$create') {
-      if (!data.includes(search)) {
-        const newData = [...data, search];
-        setData(newData);
-      }
-      if (!value.includes(search)) {
-        const newValue = [...value, search];
-        onValueChange(newValue);
-      }
+  const handleOptionSubmit = (val: string) => {
+    if (val === '$create') {
+      setData((current) => [...current, search]);
+      onValueChange(search);
+      setSearch(search);
     } else {
-      let newValue: string[];
-      if (value.includes(selectedItem)) {
-        newValue = value.filter((item) => item !== selectedItem);
-      } else {
-        newValue = [...value, selectedItem];
-      }
-      onValueChange(newValue);
+      onValueChange(val);
+      setSearch(val);
     }
-    setSearch('');
-    combobox.updateSelectedOptionIndex();
+    combobox.closeDropdown();
   };
 
   return (
@@ -74,19 +58,18 @@ export function SelectCreatable({
         <InputBase
           rightSection={<Combobox.Chevron />}
           value={search}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            const inputValue = event.currentTarget.value;
-            setSearch(inputValue);
+          onChange={(event) => {
             combobox.openDropdown();
             combobox.updateSelectedOptionIndex();
+            setSearch(event.currentTarget.value);
           }}
           onClick={() => combobox.openDropdown()}
           onFocus={() => combobox.openDropdown()}
           onBlur={() => {
             combobox.closeDropdown();
-            setSearch('');
+            setSearch(value || '');
           }}
-          placeholder="Select values"
+          placeholder="Search value"
           rightSectionPointerEvents="none"
         />
       </Combobox.Target>
@@ -94,17 +77,9 @@ export function SelectCreatable({
       <Combobox.Dropdown>
         <Combobox.Options>
           {options}
-          {search.trim().length > 0 && !data.includes(search) && (
+          {!exactOptionMatch && search.trim().length > 0 && (
             <Combobox.Option value="$create">
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <input
-                  type="checkbox"
-                  checked={value.includes(search)}
-                  readOnly
-                  style={{ marginRight: 8 }}
-                />
-                + Create {search}
-              </div>
+              + Create {search}
             </Combobox.Option>
           )}
         </Combobox.Options>
@@ -112,3 +87,47 @@ export function SelectCreatable({
     </Combobox>
   );
 }
+
+
+import React, { useState } from 'react';
+import { ICellRendererParams } from 'ag-grid-community';
+import { SelectCreatable } from './SelectCreatable';
+import { Modal } from '@mantine/core';
+
+const CustomCellRenderer: React.FC<ICellRendererParams> = (props) => {
+  const [modalOpened, setModalOpened] = useState(false);
+  const [cellValue, setCellValue] = useState<string>(props.value);
+
+  const handleButtonClick = () => {
+    setModalOpened(true);
+  };
+
+  const handleValueChange = (newValue: string) => {
+    setCellValue(newValue);
+    setModalOpened(false);
+
+    // Update the value in the grid's data model
+    props.node.setDataValue(props.column.getColId(), newValue);
+  };
+
+  return (
+    <div>
+      <button onClick={handleButtonClick}>Edit Value</button>
+      <Modal opened={modalOpened} onClose={() => setModalOpened(false)}>
+        <SelectCreatable value={cellValue} onValueChange={handleValueChange} />
+      </Modal>
+    </div>
+  );
+};
+
+export default CustomCellRenderer;
+
+
+const columnDefs = [
+  {
+    headerName: 'Item',
+    field: 'item',
+    cellRenderer: 'customCellRenderer',
+  },
+  // ... other columns
+];
