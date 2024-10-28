@@ -17,11 +17,12 @@ export function SelectCreatable({
   const [data, setData] = useState(dataList);  // Use the provided dataList as the state
   const [search, setSearch] = useState(value || '');
 
+  // Ensure that search is always a string before calling toLowerCase
   const exactOptionMatch = data.some((item) => item === search);
   const filteredOptions = exactOptionMatch
     ? data
     : data.filter((item) =>
-        item.toLowerCase().includes(search.toLowerCase().trim())
+        item.toLowerCase().includes((search || '').toLowerCase().trim())  // Ensures search is a string
       );
 
   const options = filteredOptions.map((item) => (
@@ -77,27 +78,3 @@ export function SelectCreatable({
     </Combobox>
   );
 }
-
-import React, { memo, useState } from 'react';
-import { useDropdownContext } from '../../context/DropdownValueContext';
-import { SelectCreatable } from './SelectCreatable'; // import your new component
-
-export default memo(({ value, onValueChange, stopEditing }: any) => {
-  const [currentValue, setCurrentValue] = useState<string | null>(value || '');
-  const { applicationNameList, setCurrentApplicationName } = useDropdownContext();  // This will be used instead of groceries
-
-  const handleChange = (newValue: string | null) => {
-    setCurrentApplicationName(newValue);
-    setCurrentValue(newValue);
-    onValueChange(newValue); // Update the grid's value
-  };
-
-  return (
-    <SelectCreatable
-      dataList={applicationNameList}  // Pass applicationNameList as the options
-      value={currentValue}
-      onValueChange={(selected) => handleChange(selected)}
-    />
-  );
-});
-
