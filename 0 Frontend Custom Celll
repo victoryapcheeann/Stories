@@ -1,0 +1,86 @@
+interface CustomCellEditorProps extends ICellEditorParams {}
+
+const CustomComboboxCellEditor: React.FC<CustomCellEditorProps> = memo(
+  ({ value, stopEditing, colDef }) => {
+    const combobox = useCombobox({
+      onDropdownClose: () => combobox.resetSelectedOption(),
+    });
+
+    const [data, setData] = useState<string[]>(groceries);
+    const [search, setSearch] = useState<string>(value || ''); // Initialize search with the current cell value
+    const [selectedValue, setSelectedValue] = useState<string | null>(value || null);
+
+    // Filter options based on the search input
+    const exactOptionMatch = data.some((item) => item === search);
+    const filteredOptions = exactOptionMatch
+      ? data
+      : data.filter((item) => item.toLowerCase().includes(search.toLowerCase().trim()));
+
+    const options = filteredOptions.map((item) => (
+      <Combobox.Option value={item} key={item}>
+        {item}
+      </Combobox.Option>
+    ));
+
+    // Handle when the editor loses focus or an option is selected
+    useEffect(() => {
+      if (selectedValue !== null) {
+        const field = colDef.field;
+        if (field) {
+          stopEditing();
+        }
+      }
+    }, [selectedValue, stopEditing, colDef.field]);
+
+    return (
+      <Combobox
+        store={combobox}
+        withinPortal={false}
+        onOptionSubmit={(val) => {
+          if (val === '$create') {
+            setData((current) => [...current, search]);
+            setSelectedValue(search);
+          } else {
+            setSelectedValue(val);
+            setSearch(val);
+          }
+          combobox.closeDropdown();
+        }}
+      >
+        <Combobox.Target>
+          <InputBase
+            autoFocus // Focus the input when the editor is opened
+            rightSection={<Combobox.Chevron />}
+            value={search}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setSearch(event.currentTarget.value);
+              combobox.openDropdown();
+              combobox.updateSelectedOptionIndex();
+            }}
+            onClick={() => combobox.openDropdown()}
+            onFocus={() => combobox.openDropdown()}
+            onBlur={() => {
+              if (selectedValue === null) {
+                setSelectedValue(search);
+              }
+              combobox.closeDropdown();
+            }}
+            placeholder="Search value"
+            rightSectionPointerEvents="none"
+          />
+        </Combobox.Target>
+
+        <Combobox.Dropdown>
+          <Combobox.Options>
+            {options}
+            {!exactOptionMatch && search.trim().length > 0 && (
+              <Combobox.Option value="$create">+ Create {search}</Combobox.Option>
+            )}
+          </Combobox.Options>
+        </Combobox.Dropdown>
+      </Combobox>
+    );
+  }
+);
+
+export default CustomComboboxCellEditor;
