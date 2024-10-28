@@ -2,27 +2,27 @@ import { useState } from 'react';
 import { Combobox, InputBase, useCombobox } from '@mantine/core';
 
 export function SelectCreatable({
-  dataList,          // Application Name List passed as prop
-  value,
-  onValueChange,
+  dataList,             // List of options to select from
+  value,                // Array of selected values (multi-select)
+  onValueChange,        // Callback to handle value changes
 }: {
-  dataList: string[];   // Expecting an array of strings for the application names
-  value: string | null;
-  onValueChange: (val: string | null) => void;
+  dataList: string[];   // Application Name List passed as prop
+  value: string[];      // Multi-select value (list of selected items)
+  onValueChange: (val: string[]) => void;  // Multi-select handler (updates list of selected items)
 }) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
-  const [data, setData] = useState(dataList);  // Use the provided dataList as the state
-  const [search, setSearch] = useState(value || '');
+  const [data, setData] = useState(dataList);  // List of options (modifiable)
+  const [search, setSearch] = useState('');    // Search term for filtering options
 
-  // Ensure that search is always a string before calling toLowerCase
+  // Filter options based on the search query
   const exactOptionMatch = data.some((item) => item === search);
   const filteredOptions = exactOptionMatch
     ? data
     : data.filter((item) =>
-        item.toLowerCase().includes((search || '').toLowerCase().trim())  // Ensures search is a string
+        item.toLowerCase().includes(search.toLowerCase().trim())  // Filter the list based on search
       );
 
   const options = filteredOptions.map((item) => (
@@ -31,21 +31,27 @@ export function SelectCreatable({
     </Combobox.Option>
   ));
 
+  // Handle the submission of a selected option
+  const handleOptionSubmit = (val: string) => {
+    if (val === '$create') {
+      // Add a new item to the data list and update selected values
+      const newData = [...data, search];
+      setData(newData);  // Update the available data options
+      onValueChange([...value, search]);  // Add the new option to the selected values
+    } else if (!value.includes(val)) {
+      // Add the selected option to the selected values
+      onValueChange([...value, val]);
+    }
+
+    setSearch('');  // Clear the search field after selection
+    combobox.closeDropdown();  // Close the dropdown
+  };
+
   return (
     <Combobox
       store={combobox}
       withinPortal={false}
-      onOptionSubmit={(val) => {
-        if (val === '$create') {
-          setData((current) => [...current, search]);
-          onValueChange(search);
-        } else {
-          onValueChange(val);
-          setSearch(val);
-        }
-
-        combobox.closeDropdown();
-      }}
+      onOptionSubmit={handleOptionSubmit}
     >
       <Combobox.Target>
         <InputBase
@@ -54,15 +60,12 @@ export function SelectCreatable({
           onChange={(event) => {
             combobox.openDropdown();
             combobox.updateSelectedOptionIndex();
-            setSearch(event.currentTarget.value);
+            setSearch(event.currentTarget.value);  // Update search state with user input
           }}
           onClick={() => combobox.openDropdown()}
           onFocus={() => combobox.openDropdown()}
-          onBlur={() => {
-            combobox.closeDropdown();
-            setSearch(value || '');
-          }}
-          placeholder="Search value"
+          onBlur={() => combobox.closeDropdown()}
+          placeholder="Search or create"
           rightSectionPointerEvents="none"
         />
       </Combobox.Target>
