@@ -1,36 +1,23 @@
-https://www.ag-grid.com/javascript-data-grid/row-ids/#row-ids
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Combobox, InputBase, useCombobox } from '@mantine/core';
 
 interface SelectCreatableProps {
-  value: string;
-  onValueChange: (value: string) => void;
+  dataset: string[];
+  currentValue: string[];
+  handleChange: (value: string[]) => void;
 }
 
-export function SelectCreatable({ value, onValueChange }: SelectCreatableProps) {
+export function SelectCreatable({ dataset, currentValue, handleChange }: SelectCreatableProps) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
-  const groceries = [
-    '🍎 Apples',
-    '🍌 Bananas',
-    '🥦 Broccoli',
-    '🥕 Carrots',
-    '🍫 Chocolate',
-    '🍇 Grapes',
-  ];
+  const [search, setSearch] = useState('');
 
-  const [data, setData] = useState<string[]>(groceries);
-  const [search, setSearch] = useState<string>(value || '');
-
-  const exactOptionMatch = data.some((item) => item === search);
+  const exactOptionMatch = dataset.some((item) => item === search);
   const filteredOptions = exactOptionMatch
-    ? data
-    : data.filter((item) =>
-        item.toLowerCase().includes(search.toLowerCase().trim())
-      );
+    ? dataset
+    : dataset.filter((item) => item.toLowerCase().includes(search.toLowerCase().trim()));
 
   const options = filteredOptions.map((item) => (
     <Combobox.Option value={item} key={item}>
@@ -40,13 +27,13 @@ export function SelectCreatable({ value, onValueChange }: SelectCreatableProps) 
 
   const handleOptionSubmit = (val: string) => {
     if (val === '$create') {
-      setData((current) => [...current, search]);
-      onValueChange(search);
-      setSearch(search);
-    } else {
-      onValueChange(val);
-      setSearch(val);
+      // Add the new value to the current value array
+      handleChange([...currentValue, search]);
+    } else if (!currentValue.includes(val)) {
+      // Add the selected value to the current value array if not already present
+      handleChange([...currentValue, val]);
     }
+    setSearch(''); // Clear the search input after selection
     combobox.closeDropdown();
   };
 
@@ -67,10 +54,7 @@ export function SelectCreatable({ value, onValueChange }: SelectCreatableProps) 
           }}
           onClick={() => combobox.openDropdown()}
           onFocus={() => combobox.openDropdown()}
-          onBlur={() => {
-            combobox.closeDropdown();
-            setSearch(value || '');
-          }}
+          onBlur={() => combobox.closeDropdown()}
           placeholder="Search value"
           rightSectionPointerEvents="none"
         />
@@ -80,56 +64,25 @@ export function SelectCreatable({ value, onValueChange }: SelectCreatableProps) 
         <Combobox.Options>
           {options}
           {!exactOptionMatch && search.trim().length > 0 && (
-            <Combobox.Option value="$create">
-              + Create {search}
-            </Combobox.Option>
+            <Combobox.Option value="$create">+ Create {search}</Combobox.Option>
           )}
         </Combobox.Options>
       </Combobox.Dropdown>
+
+      <div>
+        {currentValue.length > 0 && (
+          <div>
+            <strong>Selected Items:</strong>
+            <ul>
+              {currentValue.map((item) => (
+                <li key={item}>
+                  {item} <button onClick={() => handleChange(currentValue.filter((i) => i !== item))}>Remove</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </Combobox>
   );
 }
-
-
-import React, { useState } from 'react';
-import { ICellRendererParams } from 'ag-grid-community';
-import { SelectCreatable } from './SelectCreatable';
-import { Modal } from '@mantine/core';
-
-const CustomCellRenderer: React.FC<ICellRendererParams> = (props) => {
-  const [modalOpened, setModalOpened] = useState(false);
-  const [cellValue, setCellValue] = useState<string>(props.value);
-
-  const handleButtonClick = () => {
-    setModalOpened(true);
-  };
-
-  const handleValueChange = (newValue: string) => {
-    setCellValue(newValue);
-    setModalOpened(false);
-
-    // Update the value in the grid's data model
-    props.node.setDataValue(props.column.getColId(), newValue);
-  };
-
-  return (
-    <div>
-      <button onClick={handleButtonClick}>Edit Value</button>
-      <Modal opened={modalOpened} onClose={() => setModalOpened(false)}>
-        <SelectCreatable value={cellValue} onValueChange={handleValueChange} />
-      </Modal>
-    </div>
-  );
-};
-
-export default CustomCellRenderer;
-
-
-const columnDefs = [
-  {
-    headerName: 'Item',
-    field: 'item',
-    cellRenderer: 'customCellRenderer',
-  },
-  // ... other columns
-];
