@@ -3,48 +3,65 @@ import { Combobox, InputBase, useCombobox } from '@mantine/core';
 
 interface SelectCreatableProps {
   dataList: string[];
-  value: string;
-  onValueChange: (value: string) => void;
+  value: string[];
+  onValueChange: (value: string[]) => void;
 }
 
-export function SelectCreatable({ dataList, value, onValueChange }: SelectCreatableProps) {
+export function SelectCreatable({
+  dataList,
+  value,
+  onValueChange,
+}: SelectCreatableProps) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
   const [data, setData] = useState<string[]>(dataList);
-  const [search, setSearch] = useState<string>(value);
+  const [search, setSearch] = useState<string>('');
 
   useEffect(() => {
     setData(dataList);
   }, [dataList]);
 
-  useEffect(() => {
-    setSearch(value);
-  }, [value]);
-
-  const exactOptionMatch = data.includes(search);
-  const filteredOptions = exactOptionMatch
-    ? data
-    : data.filter((item) =>
-        item.toLowerCase().includes(search.toLowerCase().trim())
-      );
+  const filteredOptions = data.filter((item) =>
+    item.toLowerCase().includes(search.toLowerCase().trim())
+  );
 
   const options = filteredOptions.map((item) => (
     <Combobox.Option value={item} key={item}>
-      {item}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <input
+          type="checkbox"
+          checked={value.includes(item)}
+          readOnly
+          style={{ marginRight: 8 }}
+        />
+        {item}
+      </div>
     </Combobox.Option>
   ));
 
-  const handleOptionSubmit = (val: string) => {
-    if (val === '$create') {
-      const newData = [...data, search];
-      setData(newData);
-      onValueChange(search);
+  const handleOptionSubmit = (selectedItem: string) => {
+    if (selectedItem === '$create') {
+      if (!data.includes(search)) {
+        const newData = [...data, search];
+        setData(newData);
+      }
+      if (!value.includes(search)) {
+        const newValue = [...value, search];
+        onValueChange(newValue);
+      }
     } else {
-      onValueChange(val);
+      let newValue: string[];
+      if (value.includes(selectedItem)) {
+        newValue = value.filter((item) => item !== selectedItem);
+      } else {
+        newValue = [...value, selectedItem];
+      }
+      onValueChange(newValue);
     }
-    combobox.closeDropdown();
+    setSearch('');
+    combobox.updateSelectedOptionIndex();
   };
 
   return (
@@ -67,9 +84,9 @@ export function SelectCreatable({ dataList, value, onValueChange }: SelectCreata
           onFocus={() => combobox.openDropdown()}
           onBlur={() => {
             combobox.closeDropdown();
-            setSearch(value);
+            setSearch('');
           }}
-          placeholder="Search value"
+          placeholder="Select values"
           rightSectionPointerEvents="none"
         />
       </Combobox.Target>
@@ -77,9 +94,17 @@ export function SelectCreatable({ dataList, value, onValueChange }: SelectCreata
       <Combobox.Dropdown>
         <Combobox.Options>
           {options}
-          {!exactOptionMatch && search.trim().length > 0 && (
+          {search.trim().length > 0 && !data.includes(search) && (
             <Combobox.Option value="$create">
-              + Create {search}
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={value.includes(search)}
+                  readOnly
+                  style={{ marginRight: 8 }}
+                />
+                + Create {search}
+              </div>
             </Combobox.Option>
           )}
         </Combobox.Options>
