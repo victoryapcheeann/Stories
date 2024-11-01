@@ -1,17 +1,35 @@
-function snakeToCamel(snakeStr) {
+type AnyObject = { [key: string]: any };
+
+function snakeToCamel(snakeStr: string): string {
   return snakeStr.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
-function convertKeysToCamelCase(obj) {
-  if (Array.isArray(obj)) {
-    return obj.map(item => convertKeysToCamelCase(item));
-  } else if (obj !== null && obj.constructor === Object) {
-    return Object.entries(obj).reduce((acc, [key, value]) => {
-      const camelKey = snakeToCamel(key);
-      acc[camelKey] = convertKeysToCamelCase(value);
-      return acc;
-    }, {});
+function convertKeysToCamelCase(obj: AnyObject): AnyObject {
+  const stack: { value: AnyObject }[] = [{ value: obj }];
+
+  while (stack.length) {
+    const { value } = stack.pop()!;
+
+    if (Array.isArray(value)) {
+      value.forEach(item => {
+        if (item && typeof item === 'object') stack.push({ value: item });
+      });
+    } else if (value && typeof value === 'object') {
+      Object.entries(value).forEach(([key, val]) => {
+        const camelKey = snakeToCamel(key);
+
+        if (camelKey !== key) {
+          value[camelKey] = val;
+          delete value[key];
+        }
+
+        if (val && typeof val === 'object') {
+          stack.push({ value: val });
+        }
+      });
+    }
   }
+
   return obj;
 }
 
