@@ -1,0 +1,31 @@
+function snakeToCamel(snakeStr) {
+  return snakeStr.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+function convertKeysToCamelCase(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(item => convertKeysToCamelCase(item));
+  } else if (obj !== null && obj.constructor === Object) {
+    return Object.entries(obj).reduce((acc, [key, value]) => {
+      const camelKey = snakeToCamel(key);
+      acc[camelKey] = convertKeysToCamelCase(value);
+      return acc;
+    }, {});
+  }
+  return obj;
+}
+
+// Example usage
+const nestedObj = {
+  first_key: {
+    second_key: {
+      third_key_list: [
+        { inner_key_one: 1, inner_key_two: 2 },
+        { inner_key_three: 3, inner_key_four: 4 }
+      ]
+    }
+  }
+};
+
+const convertedObj = convertKeysToCamelCase(nestedObj);
+console.log(convertedObj);
