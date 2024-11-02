@@ -4,6 +4,24 @@ function snakeToCamel(snakeStr: string): string {
   return snakeStr.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
+// Define a mapping for specific field names with unconventional casing
+const apiFieldMap: { [key: string]: string } = {
+  processId: 'processID',
+  userId: 'userID',
+  // Add other specific mappings as needed
+};
+
+// Specify which fields need their values converted to strings
+const fieldsToConvertToString: Set<string> = new Set([
+  'processID',  // Use the mapped key name here if applicable
+  'userID'
+  // Add more keys if necessary
+]);
+
+function mapFieldName(key: string): string {
+  return apiFieldMap[key] || snakeToCamel(key); // Use mapping if available, otherwise convert to camelCase
+}
+
 function convertKeysToCamelCase(obj: AnyObject): AnyObject {
   const stack: { value: AnyObject }[] = [{ value: obj }];
 
@@ -16,13 +34,21 @@ function convertKeysToCamelCase(obj: AnyObject): AnyObject {
       });
     } else if (value && typeof value === 'object') {
       Object.entries(value).forEach(([key, val]) => {
-        const camelKey = snakeToCamel(key);
+        const camelKey = mapFieldName(key);
 
-        if (camelKey !== key) {
+        // Convert values to strings if specified in fieldsToConvertToString
+        if (fieldsToConvertToString.has(camelKey) && typeof val === 'number') {
+          value[camelKey] = val.toString();
+        } else {
           value[camelKey] = val;
+        }
+
+        // Delete the original key if it was transformed
+        if (camelKey !== key) {
           delete value[key];
         }
 
+        // Recursively process nested objects or arrays
         if (val && typeof val === 'object') {
           stack.push({ value: val });
         }
@@ -35,6 +61,8 @@ function convertKeysToCamelCase(obj: AnyObject): AnyObject {
 
 // Example usage
 const nestedObj = {
+  process_id: 12345,
+  user_id: 67890,
   first_key: {
     second_key: {
       third_key_list: [
@@ -47,3 +75,4 @@ const nestedObj = {
 
 const convertedObj = convertKeysToCamelCase(nestedObj);
 console.log(convertedObj);
+
