@@ -1,3 +1,20 @@
+// Get all selected nodes (rows)
 const selectedNodes = gridOptions.api.getSelectedNodes();
-const displayedRows = selectedNodes.map(node => gridOptions.api.getDisplayedRowAtIndex(node.rowIndex));
-console.log(displayedRows);  // Includes selected rows, generated or not
+
+// Get all columns, including generated columns
+const allColumns = gridOptions.columnApi.getAllColumns();
+
+// Extract data for each selected row including all columns
+const selectedRowsWithAllColumns = selectedNodes.map(node => {
+  const rowData = {};
+  
+  allColumns.forEach(column => {
+    const colId = column.getColId();
+    rowData[colId] = gridOptions.api.getValue(colId, node); // Get value for each column in the selected row
+  });
+
+  return rowData;
+});
+
+// Log the selected rows with all columns
+console.log(selectedRowsWithAllColumns);
