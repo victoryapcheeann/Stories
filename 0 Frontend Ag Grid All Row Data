@@ -1,0 +1,3 @@
+const selectedNodes = gridOptions.api.getSelectedNodes();
+const displayedRows = selectedNodes.map(node => gridOptions.api.getDisplayedRowAtIndex(node.rowIndex));
+console.log(displayedRows);  // Includes selected rows, generated or not
