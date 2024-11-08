@@ -1,109 +1,16 @@
-import create from 'zustand';
-
-const useStore = create((set, get) => {
-  const store = {
-    stateA: 'Initial Value A',
-    stateB: 'Initial Value B',
-    updateStateA: (newVal) => set({ stateA: newVal }),
-    updateStateB: (newVal) => set({ stateB: newVal }),
-  };
-
-  // Subscribe to changes in stateA and update stateB accordingly
-  get().subscribe(
-    (state) => state.stateA,
-    (newStateA) => {
-      set({ stateB: `Updated from stateA: ${newStateA}` });
-    }
-  );
-
-  return store;
-});
-
-export default useStore;
-
-
-
-
-
-
-
-
-
-
-// toggleStore.ts
-import { create } from 'zustand';
-
-interface ToggleState {
-  isToggled: boolean;
-  toggle: () => void;
-}
-
-const useToggleStore = create<ToggleState>((set) => ({
-  // Initial state
-  isToggled: false,
-
-  // Toggle action
-  toggle: () => set((state) => ({ isToggled: !state.isToggled })),
-}));
-
-export default useToggleStore;
-
-
-
-
-
-
-
-
-
-
-
-
-
-// store.ts
-import { create } from 'zustand';
-
-interface State {
-  state: string | null;
-  loading: boolean;
-  error: string | null;
-}
-
-interface Actions {
-  fetchData: () => Promise<void>;
-  updateAndFetch: (newData: string) => Promise<void>;
-}
-
-const useStore = create<State & Actions>((set, get) => {
-  // Define the initial store state and actions
-  const store = {
-    state: 'Initial state',
-    loading: false,
-    error: null,
-
-    // Async action to fetch data
-    fetchData: async () => {
-      set({ loading: true, error: null });
+useStore.subscribe(
+  (state) => state.userId,
+  async (userId) => {
+    if (userId) {
       try {
-        const response = await fetch('https://api.example.com/data'); // Replace with your API endpoint
+        const response = await fetch(`/api/users/${userId}`);
         const data = await response.json();
-        set({ state: data, loading: false });
+        useStore.setState({ userData: data });
       } catch (error) {
-        set({ error: 'Failed to fetch data', loading: false });
+        console.error('Failed to fetch user data:', error);
       }
-    },
-
-    // Action to update state and then fetch data
-    updateAndFetch: async (newData: string) => {
-      set({ state: newData });
-      await get().fetchData();
-    },
-  };
-
-  // Immediately call fetchData when the store initializes
-  store.fetchData();
-
-  return store;
-});
-
-export default useStore;
+    } else {
+      useStore.setState({ userData: null });
+    }
+  }
+);
