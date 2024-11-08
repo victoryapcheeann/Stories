@@ -1,0 +1,58 @@
+// store.js
+import create from 'zustand';
+
+const useStore = create((set, get) => ({
+  state: 'Initial state',
+  loading: false,
+  error: null,
+
+  // Async action to fetch data
+  fetchData: async () => {
+    set({ loading: true, error: null });
+    try {
+      const response = await fetch('https://api.example.com/data'); // Replace with your API endpoint
+      const data = await response.json();
+      set({ state: data, loading: false });
+    } catch (error) {
+      set({ error: 'Failed to fetch data', loading: false });
+    }
+  },
+
+  // Action to update state and then fetch data
+  updateAndFetch: async (newData) => {
+    // First, update the state with the new data
+    set({ state: newData });
+
+    // Now, call fetchData to fetch additional data based on the new state
+    await get().fetchData();
+  },
+}));
+
+export default useStore;
+
+
+
+// components/ComponentUsingUpdateAndFetch.js
+import useStore from '../store';
+
+const ComponentUsingUpdateAndFetch = () => {
+  const { state, loading, error, updateAndFetch } = useStore();
+
+  const handleUpdateAndFetch = () => {
+    const newData = 'Updated state value'; // Replace with your data
+    updateAndFetch(newData);
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <div>
+      <h2>Data:</h2>
+      <pre>{JSON.stringify(state, null, 2)}</pre>
+      <button onClick={handleUpdateAndFetch}>Update and Fetch</button>
+    </div>
+  );
+};
+
+export default ComponentUsingUpdateAndFetch;
