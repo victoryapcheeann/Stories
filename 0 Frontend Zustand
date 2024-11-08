@@ -1,11 +1,5 @@
-If you want to update the Zustand store's state from outside of the store, Zustand provides a way to access the store directly, allowing you to set or update the state without calling actions within components. Here’s how to do it:
-
-### 1. Export the Store's `setState` Function
-Zustand allows you to export the `setState` function directly, which enables you to update the store from anywhere in your application.
-
-```typescript
 // store.ts
-import create from 'zustand';
+import { create } from 'zustand';
 
 interface State {
   state: string | null;
@@ -18,54 +12,36 @@ interface Actions {
   updateAndFetch: (newData: string) => Promise<void>;
 }
 
-const useStore = create<State & Actions>((set, get) => ({
-  // Initial state
-  state: 'Initial state',
-  loading: false,
-  error: null,
+const useStore = create<State & Actions>((set, get) => {
+  // Define the initial store state and actions
+  const store = {
+    state: 'Initial state',
+    loading: false,
+    error: null,
 
-  // Actions
-  fetchData: async () => {
-    set({ loading: true, error: null });
-    try {
-      const response = await fetch('https://api.example.com/data');
-      const data = await response.json();
-      set({ state: data, loading: false });
-    } catch (error) {
-      set({ error: 'Failed to fetch data', loading: false });
-    }
-  },
+    // Async action to fetch data
+    fetchData: async () => {
+      set({ loading: true, error: null });
+      try {
+        const response = await fetch('https://api.example.com/data'); // Replace with your API endpoint
+        const data = await response.json();
+        set({ state: data, loading: false });
+      } catch (error) {
+        set({ error: 'Failed to fetch data', loading: false });
+      }
+    },
 
-  updateAndFetch: async (newData: string) => {
-    set({ state: newData });
-    await get().fetchData();
-  },
-}));
+    // Action to update state and then fetch data
+    updateAndFetch: async (newData: string) => {
+      set({ state: newData });
+      await get().fetchData();
+    },
+  };
 
-// Export the setState function for direct access
-export const setStoreState = useStore.setState;
+  // Immediately call fetchData when the store initializes
+  store.fetchData();
+
+  return store;
+});
 
 export default useStore;
-```
-
-### 2. Use `setStoreState` to Update the Store from Outside
-
-Now, you can import `setStoreState` anywhere in your code to update the Zustand store directly without calling any actions:
-
-```typescript
-// example.ts
-import { setStoreState } from './store';
-
-function someExternalFunction() {
-  // Directly set the state outside the store
-  setStoreState({ state: 'Updated from outside', loading: false, error: null });
-}
-```
-
-### Explanation
-
-- **Directly Setting State**: `setStoreState` lets you bypass actions and directly update the state in the store from anywhere in your application.
-- **Flexibility**: This approach is useful when you need to set the state based on events or functions outside of React components or need a more centralized way to control updates.
-
-### Important Note
-Directly modifying the store’s state from outside should be used sparingly, as it can lead to scattered state updates. It’s generally a good idea to keep updates within actions when possible for better traceability and maintenance.
