@@ -1,3 +1,33 @@
+// toggleStore.ts
+import { create } from 'zustand';
+
+interface ToggleState {
+  isToggled: boolean;
+  toggle: () => void;
+}
+
+const useToggleStore = create<ToggleState>((set) => ({
+  // Initial state
+  isToggled: false,
+
+  // Toggle action
+  toggle: () => set((state) => ({ isToggled: !state.isToggled })),
+}));
+
+export default useToggleStore;
+
+
+
+
+
+
+
+
+
+
+
+
+
 // store.ts
 import { create } from 'zustand';
 
