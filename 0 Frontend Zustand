@@ -1,3 +1,35 @@
+import create from 'zustand';
+
+const useStore = create((set, get) => {
+  const store = {
+    stateA: 'Initial Value A',
+    stateB: 'Initial Value B',
+    updateStateA: (newVal) => set({ stateA: newVal }),
+    updateStateB: (newVal) => set({ stateB: newVal }),
+  };
+
+  // Subscribe to changes in stateA and update stateB accordingly
+  get().subscribe(
+    (state) => state.stateA,
+    (newStateA) => {
+      set({ stateB: `Updated from stateA: ${newStateA}` });
+    }
+  );
+
+  return store;
+});
+
+export default useStore;
+
+
+
+
+
+
+
+
+
+
 // toggleStore.ts
 import { create } from 'zustand';
 
