@@ -1,7 +1,15 @@
-// store.js
+// store.ts
 import create from 'zustand';
 
-const useStore = create((set, get) => ({
+interface StoreState {
+  state: string | null;
+  loading: boolean;
+  error: string | null;
+  fetchData: () => Promise<void>;
+  updateAndFetch: (newData: string) => Promise<void>;
+}
+
+const useStore = create<StoreState>((set, get) => ({
   state: 'Initial state',
   loading: false,
   error: null,
@@ -19,7 +27,7 @@ const useStore = create((set, get) => ({
   },
 
   // Action to update state and then fetch data
-  updateAndFetch: async (newData) => {
+  updateAndFetch: async (newData: string) => {
     // First, update the state with the new data
     set({ state: newData });
 
