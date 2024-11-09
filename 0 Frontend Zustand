@@ -1,16 +1,23 @@
+import create from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
+
+// Create the store with the subscribeWithSelector middleware
+const useStore = create(
+  subscribeWithSelector((set, get) => ({
+    count: 0,
+    doubleCount: 0,
+    increment: () => set((state) => ({ count: state.count + 1 })),
+    decrement: () => set((state) => ({ count: state.count - 1 })),
+  }))
+);
+
+// Subscribe to changes in 'count' to update 'doubleCount'
 useStore.subscribe(
-  (state) => state.userId,
-  async (userId) => {
-    if (userId) {
-      try {
-        const response = await fetch(`/api/users/${userId}`);
-        const data = await response.json();
-        useStore.setState({ userData: data });
-      } catch (error) {
-        console.error('Failed to fetch user data:', error);
-      }
-    } else {
-      useStore.setState({ userData: null });
-    }
+  (state) => state.count, // Selector: watch the 'count' state
+  (count) => {
+    // Callback: update 'doubleCount' when 'count' changes
+    useStore.setState({ doubleCount: count * 2 });
   }
 );
+
+export default useStore;
