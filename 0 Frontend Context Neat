@@ -2,8 +2,9 @@ export const ProviderComposer = ({ children, pathname }: ProviderComposerProps) 
   // Find the first provider group that matches the current pathname
   const matchedProviders = providers.find(({ condition }) => condition(pathname))?.providers;
 
-  // If a match is found, wrap children with the matched providers, otherwise return children as-is
-  return matchedProviders
-    ? matchedProviders.reduceRight((wrapped, Provider) => <Provider>{wrapped}</Provider>, children)
-    : children;
+  // If matchedProviders exist, use them; otherwise, use the DefaultProvider
+  const activeProviders = matchedProviders || [DefaultProvider];
+
+  // Wrap children with the active providers
+  return activeProviders.reduceRight((wrapped, Provider) => <Provider>{wrapped}</Provider>, children);
 };
