@@ -1,6 +1,26 @@
 import create from 'zustand';
 import { persist } from 'zustand/middleware';
 
+// Custom storage object to wrap localStorage
+const zustandStorage = {
+  getItem: (name: string) => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(name);
+    }
+    return null;
+  },
+  setItem: (name: string, value: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(name, value);
+    }
+  },
+  removeItem: (name: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(name);
+    }
+  },
+};
+
 const useDropdownValueStore = create(
   persist(
     (set) => ({
@@ -31,7 +51,7 @@ const useDropdownValueStore = create(
     }),
     {
       name: 'dropdown-value-store',
-      getStorage: () => (typeof window !== 'undefined' ? localStorage : undefined),
+      storage: zustandStorage, // Use the custom storage object
     }
   )
 );
