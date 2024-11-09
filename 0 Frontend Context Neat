@@ -1,53 +1,79 @@
-If you have multiple conditions for wrapping pages in providers, you can still use a conditional setup in `_app.js` while keeping it organized and clean. Here’s a structured approach using an array of conditions and a helper function to apply providers only to specific pages:
+Let's convert this to TypeScript and add support for multiple providers on specific routes. With TypeScript, we can define types for the providers, conditions, and the overall `ProviderComposer` component.
 
-### Approach: Use a `ProviderComposer` with Multiple Conditions
+To handle multiple providers per path, we can update the `providers` array to accept an array of `provider` functions for each condition, wrapping `children` in each applicable provider.
 
-1. **Define Conditions in an Array**: Create an array of conditions, each specifying which provider to wrap around the page based on the route. This keeps all conditions in one place, making it easy to add or modify.
+Here’s how to do it:
 
-2. **Create a `ProviderComposer` Component**: This component iterates over the array of providers and applies each one conditionally.
+### 1. Update `ProviderComposer` to TypeScript with Multiple Providers per Path
 
-3. **Use the `ProviderComposer` in `_app.js`**: Wrap `Component` with `ProviderComposer` to apply only the necessary providers based on the current route.
-
-Here’s how this would look in code:
-
-### 1. Define the `ProviderComposer`
-
-```javascript
-// src/components/ProviderComposer.js
+```typescript
+// src/components/ProviderComposer.tsx
+import { ReactNode } from 'react';
 import { CounterStoreProvider } from '@/providers/counter-store-provider';
 import { AnotherStoreProvider } from '@/providers/another-store-provider';
 
-const providers = [
+// Define type for provider components
+type ProviderComponent = ({ children }: { children: ReactNode }) => JSX.Element;
+
+// Define type for each condition entry
+interface ProviderCondition {
+  providers: ProviderComponent[]; // Accepts multiple providers
+  condition: (pathname: string) => boolean;
+}
+
+// Define the list of providers with conditions
+const providers: ProviderCondition[] = [
   {
-    provider: CounterStoreProvider,
+    providers: [CounterStoreProvider],
     condition: (pathname) => pathname.startsWith('/counter-page'),
   },
   {
-    provider: AnotherStoreProvider,
+    providers: [AnotherStoreProvider],
     condition: (pathname) => pathname.startsWith('/another-page'),
   },
-  // Add more providers and conditions as needed
+  {
+    providers: [CounterStoreProvider, AnotherStoreProvider],
+    condition: (pathname) => pathname.startsWith('/multi-provider-page'),
+  },
+  // Add more provider configurations as needed
 ];
 
-export const ProviderComposer = ({ children, pathname }) => {
-  return providers.reduce((acc, { provider: Provider, condition }) => {
-    return condition(pathname) ? <Provider>{acc}</Provider> : acc;
+// Define the ProviderComposer component
+interface ProviderComposerProps {
+  children: ReactNode;
+  pathname: string;
+}
+
+export const ProviderComposer = ({ children, pathname }: ProviderComposerProps) => {
+  return providers.reduce((acc, { providers, condition }) => {
+    // Wrap children in each provider for matching conditions
+    return condition(pathname)
+      ? providers.reduceRight((wrapped, Provider) => <Provider>{wrapped}</Provider>, acc)
+      : acc;
   }, children);
 };
 ```
 
-In this setup:
-- `providers` is an array where each entry includes a `provider` and a `condition` function.
-- The `condition` function checks the current `pathname` and decides if the `provider` should wrap the children.
-- `reduce` applies each provider that meets its condition to the `children`, nesting them as needed.
+### Explanation of Changes
 
-### 2. Apply `ProviderComposer` in `_app.js`
+1. **Type Definitions**:
+   - `ProviderComponent`: A type representing any provider component, expecting `children` as props.
+   - `ProviderCondition`: Specifies an array of `providers` (for multiple providers per path) and a `condition` function to evaluate the pathname.
 
-```javascript
-// src/pages/_app.js
+2. **Updated `providers` Array**:
+   - Each entry now has a `providers` array, allowing multiple providers for each condition.
+
+3. **Nested `reduceRight` for Wrapping Multiple Providers**:
+   - `reduceRight` iterates through the `providers` array in reverse to wrap `acc` (the children) in each provider if the condition matches. This allows multiple providers to wrap around `children` sequentially.
+
+### 2. Use `ProviderComposer` in `_app.tsx`
+
+```typescript
+// src/pages/_app.tsx
+import { AppProps } from 'next/app';
 import { ProviderComposer } from '@/components/ProviderComposer';
 
-function MyApp({ Component, pageProps, router }) {
+function MyApp({ Component, pageProps, router }: AppProps) {
   return (
     <ProviderComposer pathname={router.pathname}>
       <Component {...pageProps} />
@@ -58,9 +84,10 @@ function MyApp({ Component, pageProps, router }) {
 export default MyApp;
 ```
 
-### Benefits of This Approach
-- **Neat and Scalable**: You keep all conditions in a single array, making it easy to see which providers apply to which routes.
-- **Easy to Modify**: Adding or removing conditions is straightforward—just update the `providers` array.
-- **Avoids Multiple Wrappings**: Only the necessary providers wrap each page, reducing overhead and preventing redundant calls.
+### Benefits of This Setup
 
-This setup keeps your code organized and allows for easy scaling as you add more conditions or providers. It’s also flexible if you later want to add more complex conditions or different providers for different parts of the app.
+- **Flexibility**: Easily add multiple providers to a single path by including them in the `providers` array.
+- **Type Safety**: TypeScript definitions ensure each provider meets the expected structure.
+- **Readability**: Keeping the provider conditions organized in a single array makes it easy to manage and extend.
+
+This solution is flexible, type-safe, and scales well when you need to apply multiple providers conditionally based on the route.
