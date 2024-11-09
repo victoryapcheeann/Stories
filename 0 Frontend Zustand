@@ -1,23 +1,39 @@
 import create from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 
-// Create the store with the subscribeWithSelector middleware
-const useStore = create(
-  subscribeWithSelector((set, get) => ({
-    count: 0,
-    doubleCount: 0,
-    increment: () => set((state) => ({ count: state.count + 1 })),
-    decrement: () => set((state) => ({ count: state.count - 1 })),
-  }))
+const useDropdownValueStore = create(
+  persist(
+    (set) => ({
+      applicationNameData: null,
+      processIDData: null,
+      applicationNameList: [],
+      currentApplicationName: [],
+      processIDList: null,
+      loading: true,
+
+      fetchData: async () => {
+        const response = await apiCall('/cda/attribute/create/start');
+        if (response.success) {
+          const applicationNameData = response.data[0];
+          const processIDData = response.data[1];
+          const applicationNameList = Object.keys(response.data[0]);
+          const processIDList = Object.keys(response.data[1]);
+
+          set({
+            applicationNameData,
+            processIDData,
+            applicationNameList,
+            processIDList,
+            loading: false,
+          });
+        }
+      },
+    }),
+    {
+      name: 'dropdown-value-store',
+      getStorage: () => (typeof window !== 'undefined' ? localStorage : undefined),
+    }
+  )
 );
 
-// Subscribe to changes in 'count' to update 'doubleCount'
-useStore.subscribe(
-  (state) => state.count, // Selector: watch the 'count' state
-  (count) => {
-    // Callback: update 'doubleCount' when 'count' changes
-    useStore.setState({ doubleCount: count * 2 });
-  }
-);
-
-export default useStore;
+export default useDropdownValueStore;
