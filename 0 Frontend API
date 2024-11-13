@@ -1,0 +1,36 @@
+  const makeApiCalls = async (dataParts) => {
+    setLoading(true);
+    try {
+      const promises = dataParts.map(part => {
+        const url = `https://api.example.com/${part}`;
+        return fetch(url)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`Error fetching ${url}: ${response.statusText}`);
+            }
+            return response.json();
+          });
+      });
+
+      const data = await Promise.all(promises); // Wait for all the promises to resolve
+      setLoading(false);
+      return data; // Return the array of results
+    } catch (error) {
+      setLoading(false);
+      console.error('Error fetching data:', error);
+      return { error: 'Something went wrong' }; // Handle errors
+    }
+  };
+
+
+
+
+
+    const dataParts = ['data1', 'data2', 'data3'];  // Example dynamic parts
+    
+    const fetchData = async () => {
+      const result = await makeApiCalls(dataParts);  // Pass the list to the API function
+      setData(result);  // Store the data returned by the API
+    };
+
+    fetchData();
