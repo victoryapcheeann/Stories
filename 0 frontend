@@ -1,0 +1,20 @@
+type OriginalObject = Record<string, any>; // Type for each object in the list
+type TransformedObject = { title: string; value: any }; // Type for each { title, value } entry
+
+const transformList = (list: OriginalObject[]): TransformedObject[][] => {
+  return list.map(item =>
+    Object.entries(item).map(([key, value]) => ({
+      title: key,
+      value: value
+    }))
+  );
+};
+
+// Example usage
+const listOfObjects: OriginalObject[] = [
+  { name: "Alice", age: 25, city: "New York" },
+  { name: "Bob", age: 30, city: "Los Angeles" }
+];
+
+const transformedList = transformList(listOfObjects);
+console.log(transformedList);
