@@ -1,24 +1,20 @@
 function transformKeys(inputObject) {
   const transformedObject = {};
-  
+
   for (const [key, value] of Object.entries(inputObject)) {
-    // Split key into words, capitalize the first letter, and join back with spaces
+    // Replace underscores with spaces, then split key into words, capitalize, and join back with spaces
     const transformedKey = key
-      .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-      .trim()                     // Remove leading/trailing spaces
+      .replace(/_/g, ' ')             // Replace underscores with spaces
+      .replace(/([A-Z])/g, ' $1')     // Add space before capital letters
+      .trim()                         // Remove leading/trailing spaces
       .replace(/^\w|\s\w/g, match => match.toUpperCase()); // Capitalize first letter of each word
 
     transformedObject[transformedKey] = value;
   }
-  
+
   return transformedObject;
 }
 
-const input = { testingField: 'testing', yoField: 'yo' };
+const input = { testing_field: 'testing', yo_field: 'yo' };
 const result = transformKeys(input);
 console.log(result);
-
-
-
-
-
