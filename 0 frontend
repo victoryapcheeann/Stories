@@ -1,42 +1,31 @@
-If every column has its own custom validation logic, the best approach is to:
+Here’s a **less strict TypeScript version** of the example, reducing some of the typing complexity but still leveraging TypeScript to provide basic type safety.
 
-1. **Encapsulate Validation Logic**: Define validation logic for each column separately and maintain it in a structured way, such as a map or an object where each column has its corresponding validation function.
+---
 
-2. **Apply Column-Specific Validation**: During row validation, dynamically apply the appropriate validation logic for each column based on its key.
+### 1. Define Column Validation Rules
 
-### Example Implementation
+Here, we relax the strict typing of validators by allowing them to handle any data type.
 
-Here’s how to handle this scenario effectively:
-
-#### 1. Define Column Validation Rules
-Create an object that maps each column key to its specific validation logic.
-
-```javascript
-const columnValidators = {
-    fieldA: (value) => {
-        if (!value) return 'Field A is required.';
-        return null; // No error
-    },
-    fieldB: (value) => {
-        if (value <= 0) return 'Field B must be greater than 0.';
-        return null;
-    },
-    fieldC: (value) => {
-        if (value && value.length < 5) return 'Field C must have at least 5 characters.';
-        return null;
-    },
+```typescript
+const columnValidators: Record<string, (value: any) => string | null> = {
+    fieldA: (value) => (!value ? 'Field A is required.' : null),
+    fieldB: (value) => (value <= 0 ? 'Field B must be greater than 0.' : null),
+    fieldC: (value) => (value && value.length < 5 ? 'Field C must have at least 5 characters.' : null),
 };
 ```
 
-#### 2. Row Validation Logic
-Iterate through each row and apply the validation logic for each column dynamically.
+---
 
-```javascript
-const validateSelectedRows = (selectedRows) => {
+### 2. Row Validation Logic
+
+We simplify the type definitions and validations by keeping the structure of the `rowErrors` object loose.
+
+```typescript
+const validateSelectedRows = (selectedRows: any[]): { rowIndex: number; rowErrors: any }[] => {
     const errors = [];
 
     selectedRows.forEach((row, rowIndex) => {
-        const rowErrors = {};
+        const rowErrors: any = {};
 
         Object.keys(columnValidators).forEach((columnKey) => {
             const validator = columnValidators[columnKey];
@@ -56,11 +45,14 @@ const validateSelectedRows = (selectedRows) => {
 };
 ```
 
-#### 3. Highlight and Display Errors
-Use the validation results to provide feedback to users and highlight errors in the grid.
+---
 
-```javascript
-const onValidateAndSubmit = () => {
+### 3. Highlight and Display Errors
+
+This part stays almost the same, but error structures are simplified for easier handling.
+
+```typescript
+const onValidateAndSubmit = (): void => {
     const selectedRows = gridApi.getSelectedRows();
 
     // Validate the rows
@@ -69,10 +61,12 @@ const onValidateAndSubmit = () => {
     if (validationErrors.length > 0) {
         // Highlight invalid rows or cells
         validationErrors.forEach(({ rowIndex, rowErrors }) => {
-            const rowNode = gridApi.getRowNode(rowIndex);
+            const rowNode = gridApi.getRowNode(rowIndex.toString()); // Use rowIndex as string
 
             // Example: Attach error metadata to the row data for styling
-            rowNode.setDataValue('hasError', true);
+            if (rowNode) {
+                rowNode.setDataValue('hasError', true);
+            }
         });
 
         // Display a consolidated error message
@@ -91,21 +85,58 @@ const onValidateAndSubmit = () => {
 };
 ```
 
-#### 4. Highlight Errors in the Grid
-Use `cellClassRules` to style invalid cells dynamically.
+---
 
-```javascript
-cellClassRules: {
-    'cell-error': (params) => params.data?.errors && params.data.errors[params.colDef.field],
-},
+### 4. Sending Data to the API
+
+The API function is slightly relaxed with a generic `any` type for input data.
+
+```typescript
+const sendToAPI = (data: any[]): void => {
+    fetch('/api/endpoint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+        .then((response) => response.json())
+        .then((result) => console.log('Success:', result))
+        .catch((error) => console.error('Error:', error));
+};
 ```
 
-#### 5. Optional: Immediate Validation in Editors
-If you want real-time feedback, integrate the column validators into custom editors or on cell value change.
+---
 
-### Key Points
-1. **Dynamic Validation**: By maintaining validators in a central `columnValidators` object, you can easily update and extend validation logic for each column.
-2. **Scalable**: This approach scales well even if you have many columns with unique validation requirements.
-3. **User Feedback**: Provide immediate visual feedback in the grid using `cellClassRules`, and consolidate error messages for clarity.
+### 5. Use in AG Grid
 
-This structure ensures every column has its own custom validation logic while keeping the code modular and maintainable.
+The integration with AG Grid stays the same, focusing on loose types and dynamic error handling.
+
+```typescript
+<AgGridReact
+    rowData={rowData}
+    columnDefs={columnDefs}
+    getRowNodeId={(data) => data.id} // Ensure each row has a unique ID
+    cellClassRules={{
+        'cell-error': (params: any) => {
+            return params.data?.hasError && !!params.data.errors[params.colDef.field];
+        },
+    }}
+/>
+```
+
+---
+
+### Summary of Changes
+1. **Simplified Type Definitions**:
+   - `any` is used for row data, validation errors, and selected rows.
+   - Validators still have a return type of `string | null`.
+
+2. **Looser Error Structure**:
+   - The `rowErrors` object is loosely typed as `any`.
+
+3. **Relaxed API Function**:
+   - Input data to `sendToAPI` is of type `any[]`.
+
+4. **Maintains Flexibility**:
+   - This approach works well for dynamic data without requiring strict type definitions upfront.
+
+This version is less strict and more suitable for scenarios where your data structure might evolve or when you prefer to prioritize flexibility over strict type safety.
