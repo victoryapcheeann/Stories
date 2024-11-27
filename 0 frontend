@@ -1,20 +1,111 @@
-type OriginalObject = Record<string, any>; // Type for each object in the list
-type TransformedObject = { title: string; value: any }; // Type for each { title, value } entry
+If every column has its own custom validation logic, the best approach is to:
 
-const transformList = (list: OriginalObject[]): TransformedObject[][] => {
-  return list.map(item =>
-    Object.entries(item).map(([key, value]) => ({
-      title: key,
-      value: value
-    }))
-  );
+1. **Encapsulate Validation Logic**: Define validation logic for each column separately and maintain it in a structured way, such as a map or an object where each column has its corresponding validation function.
+
+2. **Apply Column-Specific Validation**: During row validation, dynamically apply the appropriate validation logic for each column based on its key.
+
+### Example Implementation
+
+Here’s how to handle this scenario effectively:
+
+#### 1. Define Column Validation Rules
+Create an object that maps each column key to its specific validation logic.
+
+```javascript
+const columnValidators = {
+    fieldA: (value) => {
+        if (!value) return 'Field A is required.';
+        return null; // No error
+    },
+    fieldB: (value) => {
+        if (value <= 0) return 'Field B must be greater than 0.';
+        return null;
+    },
+    fieldC: (value) => {
+        if (value && value.length < 5) return 'Field C must have at least 5 characters.';
+        return null;
+    },
 };
+```
 
-// Example usage
-const listOfObjects: OriginalObject[] = [
-  { name: "Alice", age: 25, city: "New York" },
-  { name: "Bob", age: 30, city: "Los Angeles" }
-];
+#### 2. Row Validation Logic
+Iterate through each row and apply the validation logic for each column dynamically.
 
-const transformedList = transformList(listOfObjects);
-console.log(transformedList);
+```javascript
+const validateSelectedRows = (selectedRows) => {
+    const errors = [];
+
+    selectedRows.forEach((row, rowIndex) => {
+        const rowErrors = {};
+
+        Object.keys(columnValidators).forEach((columnKey) => {
+            const validator = columnValidators[columnKey];
+            const error = validator(row[columnKey]);
+
+            if (error) {
+                rowErrors[columnKey] = error;
+            }
+        });
+
+        if (Object.keys(rowErrors).length > 0) {
+            errors.push({ rowIndex, rowErrors });
+        }
+    });
+
+    return errors;
+};
+```
+
+#### 3. Highlight and Display Errors
+Use the validation results to provide feedback to users and highlight errors in the grid.
+
+```javascript
+const onValidateAndSubmit = () => {
+    const selectedRows = gridApi.getSelectedRows();
+
+    // Validate the rows
+    const validationErrors = validateSelectedRows(selectedRows);
+
+    if (validationErrors.length > 0) {
+        // Highlight invalid rows or cells
+        validationErrors.forEach(({ rowIndex, rowErrors }) => {
+            const rowNode = gridApi.getRowNode(rowIndex);
+
+            // Example: Attach error metadata to the row data for styling
+            rowNode.setDataValue('hasError', true);
+        });
+
+        // Display a consolidated error message
+        const errorMessages = validationErrors.map(({ rowIndex, rowErrors }) => {
+            return `Row ${rowIndex + 1}: ${Object.entries(rowErrors)
+                .map(([col, msg]) => `${col} - ${msg}`)
+                .join(', ')}`;
+        });
+
+        alert(`Validation Errors:\n${errorMessages.join('\n')}`);
+        console.error('Validation Errors:', validationErrors);
+    } else {
+        // Proceed to send data to API
+        sendToAPI(selectedRows);
+    }
+};
+```
+
+#### 4. Highlight Errors in the Grid
+Use `cellClassRules` to style invalid cells dynamically.
+
+```javascript
+cellClassRules: {
+    'cell-error': (params) => params.data?.errors && params.data.errors[params.colDef.field],
+},
+```
+
+#### 5. Optional: Immediate Validation in Editors
+If you want real-time feedback, integrate the column validators into custom editors or on cell value change.
+
+### Key Points
+1. **Dynamic Validation**: By maintaining validators in a central `columnValidators` object, you can easily update and extend validation logic for each column.
+2. **Scalable**: This approach scales well even if you have many columns with unique validation requirements.
+3. **User Feedback**: Provide immediate visual feedback in the grid using `cellClassRules`, and consolidate error messages for clarity.
+
+This structure ensures every column has its own custom validation logic while keeping the code modular and maintainable.
