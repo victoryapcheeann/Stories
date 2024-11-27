@@ -1,142 +1,24 @@
-Here’s a **less strict TypeScript version** of the example, reducing some of the typing complexity but still leveraging TypeScript to provide basic type safety.
+function transformKeys(inputObject) {
+  const transformedObject = {};
+  
+  for (const [key, value] of Object.entries(inputObject)) {
+    // Split key into words, capitalize the first letter, and join back with spaces
+    const transformedKey = key
+      .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+      .trim()                     // Remove leading/trailing spaces
+      .replace(/^\w|\s\w/g, match => match.toUpperCase()); // Capitalize first letter of each word
 
----
+    transformedObject[transformedKey] = value;
+  }
+  
+  return transformedObject;
+}
 
-### 1. Define Column Validation Rules
+const input = { testingField: 'testing', yoField: 'yo' };
+const result = transformKeys(input);
+console.log(result);
 
-Here, we relax the strict typing of validators by allowing them to handle any data type.
 
-```typescript
-const columnValidators: Record<string, (value: any) => string | null> = {
-    fieldA: (value) => (!value ? 'Field A is required.' : null),
-    fieldB: (value) => (value <= 0 ? 'Field B must be greater than 0.' : null),
-    fieldC: (value) => (value && value.length < 5 ? 'Field C must have at least 5 characters.' : null),
-};
-```
 
----
 
-### 2. Row Validation Logic
 
-We simplify the type definitions and validations by keeping the structure of the `rowErrors` object loose.
-
-```typescript
-const validateSelectedRows = (selectedRows: any[]): { rowIndex: number; rowErrors: any }[] => {
-    const errors = [];
-
-    selectedRows.forEach((row, rowIndex) => {
-        const rowErrors: any = {};
-
-        Object.keys(columnValidators).forEach((columnKey) => {
-            const validator = columnValidators[columnKey];
-            const error = validator(row[columnKey]);
-
-            if (error) {
-                rowErrors[columnKey] = error;
-            }
-        });
-
-        if (Object.keys(rowErrors).length > 0) {
-            errors.push({ rowIndex, rowErrors });
-        }
-    });
-
-    return errors;
-};
-```
-
----
-
-### 3. Highlight and Display Errors
-
-This part stays almost the same, but error structures are simplified for easier handling.
-
-```typescript
-const onValidateAndSubmit = (): void => {
-    const selectedRows = gridApi.getSelectedRows();
-
-    // Validate the rows
-    const validationErrors = validateSelectedRows(selectedRows);
-
-    if (validationErrors.length > 0) {
-        // Highlight invalid rows or cells
-        validationErrors.forEach(({ rowIndex, rowErrors }) => {
-            const rowNode = gridApi.getRowNode(rowIndex.toString()); // Use rowIndex as string
-
-            // Example: Attach error metadata to the row data for styling
-            if (rowNode) {
-                rowNode.setDataValue('hasError', true);
-            }
-        });
-
-        // Display a consolidated error message
-        const errorMessages = validationErrors.map(({ rowIndex, rowErrors }) => {
-            return `Row ${rowIndex + 1}: ${Object.entries(rowErrors)
-                .map(([col, msg]) => `${col} - ${msg}`)
-                .join(', ')}`;
-        });
-
-        alert(`Validation Errors:\n${errorMessages.join('\n')}`);
-        console.error('Validation Errors:', validationErrors);
-    } else {
-        // Proceed to send data to API
-        sendToAPI(selectedRows);
-    }
-};
-```
-
----
-
-### 4. Sending Data to the API
-
-The API function is slightly relaxed with a generic `any` type for input data.
-
-```typescript
-const sendToAPI = (data: any[]): void => {
-    fetch('/api/endpoint', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-    })
-        .then((response) => response.json())
-        .then((result) => console.log('Success:', result))
-        .catch((error) => console.error('Error:', error));
-};
-```
-
----
-
-### 5. Use in AG Grid
-
-The integration with AG Grid stays the same, focusing on loose types and dynamic error handling.
-
-```typescript
-<AgGridReact
-    rowData={rowData}
-    columnDefs={columnDefs}
-    getRowNodeId={(data) => data.id} // Ensure each row has a unique ID
-    cellClassRules={{
-        'cell-error': (params: any) => {
-            return params.data?.hasError && !!params.data.errors[params.colDef.field];
-        },
-    }}
-/>
-```
-
----
-
-### Summary of Changes
-1. **Simplified Type Definitions**:
-   - `any` is used for row data, validation errors, and selected rows.
-   - Validators still have a return type of `string | null`.
-
-2. **Looser Error Structure**:
-   - The `rowErrors` object is loosely typed as `any`.
-
-3. **Relaxed API Function**:
-   - Input data to `sendToAPI` is of type `any[]`.
-
-4. **Maintains Flexibility**:
-   - This approach works well for dynamic data without requiring strict type definitions upfront.
-
-This version is less strict and more suitable for scenarios where your data structure might evolve or when you prefer to prioritize flexibility over strict type safety.
