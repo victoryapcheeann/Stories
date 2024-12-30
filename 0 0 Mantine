@@ -1,0 +1,116 @@
+To centralize notifications in Mantine, you can create a reusable utility or a custom hook that wraps Mantine's `showNotification` or `updateNotification` methods. This approach keeps your notification logic consistent and reusable throughout your application.
+
+### Example: Centralized Notification Utility
+
+1. **Install Mantine Notifications if not already installed**:
+
+   ```bash
+   npm install @mantine/notifications
+   ```
+
+2. **Create a Centralized Notification Utility**:
+   Create a file, e.g., `notificationService.js`:
+
+   ```javascript
+   import { showNotification, updateNotification } from '@mantine/notifications';
+
+   const notificationTypes = {
+     success: (title, message) => {
+       showNotification({
+         title,
+         message,
+         color: 'green',
+         autoClose: 3000,
+       });
+     },
+     error: (title, message) => {
+       showNotification({
+         title,
+         message,
+         color: 'red',
+         autoClose: 5000,
+       });
+     },
+     info: (title, message) => {
+       showNotification({
+         title,
+         message,
+         color: 'blue',
+         autoClose: 3000,
+       });
+     },
+     loading: (id, title, message) => {
+       showNotification({
+         id,
+         title,
+         message,
+         loading: true,
+         autoClose: false,
+       });
+     },
+     update: (id, title, message, color = 'blue') => {
+       updateNotification({
+         id,
+         title,
+         message,
+         color,
+         autoClose: 3000,
+       });
+     },
+   };
+
+   export const notify = {
+     success: notificationTypes.success,
+     error: notificationTypes.error,
+     info: notificationTypes.info,
+     loading: notificationTypes.loading,
+     update: notificationTypes.update,
+   };
+   ```
+
+3. **Use the Centralized Notifications**:
+   Instead of calling `showNotification` or `updateNotification` directly, use the `notify` object:
+
+   ```javascript
+   import { notify } from './notificationService';
+
+   const handleSuccess = () => {
+     notify.success('Operation Successful', 'Your data has been saved successfully!');
+   };
+
+   const handleError = () => {
+     notify.error('Operation Failed', 'Something went wrong, please try again.');
+   };
+
+   const handleLoadingAndUpdate = async () => {
+     notify.loading('loading-id', 'Loading', 'Processing your request...');
+     try {
+       // Simulate async operation
+       await new Promise((resolve) => setTimeout(resolve, 2000));
+       notify.update('loading-id', 'Success', 'Operation completed successfully', 'green');
+     } catch {
+       notify.update('loading-id', 'Error', 'Operation failed', 'red');
+     }
+   };
+   ```
+
+4. **Add Notifications Provider in Your App**:
+   Ensure the `NotificationsProvider` wraps your application:
+
+   ```javascript
+   import { NotificationsProvider } from '@mantine/notifications';
+   import React from 'react';
+   import ReactDOM from 'react-dom';
+   import App from './App';
+
+   ReactDOM.render(
+     <React.StrictMode>
+       <NotificationsProvider>
+         <App />
+       </NotificationsProvider>
+     </React.StrictMode>,
+     document.getElementById('root')
+   );
+   ```
+
+With this setup, you now have a centralized, reusable way to handle notifications across your application.
