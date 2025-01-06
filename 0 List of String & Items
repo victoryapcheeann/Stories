@@ -1,0 +1,151 @@
+import React, { useState } from 'react';
+import { useForm } from '@mantine/form';
+import { TextInput, Button, Stack, Group, ActionIcon } from '@mantine/core';
+import { IconTrash } from '@tabler/icons-react';
+
+function MyForm() {
+  const form = useForm({
+    initialValues: {
+      items: [], // List of strings
+    },
+  });
+
+  const [newItem, setNewItem] = useState('');
+
+  const addItem = () => {
+    if (newItem.trim()) {
+      form.setFieldValue('items', [...form.values.items, newItem.trim()]);
+      setNewItem('');
+    }
+  };
+
+  const removeItem = (index) => {
+    form.setFieldValue(
+      'items',
+      form.values.items.filter((_, i) => i !== index)
+    );
+  };
+
+  return (
+    <form onSubmit={form.onSubmit((values) => console.log(values))}>
+      <Stack>
+        {/* Input for adding new items */}
+        <Group>
+          <TextInput
+            value={newItem}
+            onChange={(event) => setNewItem(event.currentTarget.value)}
+            placeholder="Add new item"
+          />
+          <Button onClick={addItem}>Add</Button>
+        </Group>
+
+        {/* Display the list of strings */}
+        {form.values.items.map((item, index) => (
+          <Group key={index} spacing="xs">
+            <TextInput
+              value={item}
+              onChange={(event) =>
+                form.setFieldValue(
+                  `items.${index}`,
+                  event.currentTarget.value
+                )
+              }
+              style={{ flex: 1 }}
+            />
+            <ActionIcon color="red" onClick={() => removeItem(index)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Group>
+        ))}
+
+        <Button type="submit">Submit</Button>
+      </Stack>
+    </form>
+  );
+}
+
+export default MyForm;
+
+
+import React from 'react';
+import { useForm } from '@mantine/form';
+import { Dropzone, DropzoneProps, MIME_TYPES } from '@mantine/dropzone';
+import {
+  Group,
+  Button,
+  Stack,
+  Text,
+  ActionIcon,
+  Paper,
+} from '@mantine/core';
+import { IconUpload, IconTrash, IconFile } from '@tabler/icons-react';
+
+function MyForm() {
+  const form = useForm({
+    initialValues: {
+      files: [], // List of files
+    },
+  });
+
+  const addFiles = (newFiles) => {
+    form.setFieldValue('files', [...form.values.files, ...newFiles]);
+  };
+
+  const removeFile = (fileIndex) => {
+    form.setFieldValue(
+      'files',
+      form.values.files.filter((_, index) => index !== fileIndex)
+    );
+  };
+
+  return (
+    <form onSubmit={form.onSubmit((values) => console.log(values))}>
+      <Stack>
+        {/* Dropzone for file upload */}
+        <Dropzone
+          onDrop={(files) => addFiles(files)}
+          accept={[MIME_TYPES.png, MIME_TYPES.jpeg, MIME_TYPES.pdf]}
+          multiple
+        >
+          {() => (
+            <Group position="center" spacing="xl" style={{ minHeight: 120 }}>
+              <IconUpload size={32} />
+              <Text>Drag files here or click to select files</Text>
+            </Group>
+          )}
+        </Dropzone>
+
+        {/* Display uploaded files */}
+        {form.values.files.length > 0 && (
+          <Stack spacing="sm">
+            {form.values.files.map((file, index) => (
+              <Paper
+                key={index}
+                shadow="xs"
+                padding="sm"
+                withBorder
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <Group spacing="xs">
+                  <IconFile size={16} />
+                  <Text size="sm" lineClamp={1}>
+                    {file.name}
+                  </Text>
+                </Group>
+                <ActionIcon color="red" onClick={() => removeFile(index)}>
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </Paper>
+            ))}
+          </Stack>
+        )}
+
+        {/* Submit Button */}
+        <Button type="submit">Submit</Button>
+      </Stack>
+    </form>
+  );
+}
+
+export default MyForm;
+
