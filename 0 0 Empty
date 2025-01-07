@@ -1,0 +1,16 @@
+const checkNotEmpty = (item) => {
+    if (Array.isArray(item)) {
+        return item.length > 0; // Check for arrays
+    } else if (typeof item === "object" && item !== null) {
+        return Object.keys(item).length > 0; // Check for objects
+    }
+    return false; // For other types, return false
+};
+
+const array = [1, 2, 3];
+const object = { key: "value" };
+
+console.log(checkNotEmpty(array)); // true
+console.log(checkNotEmpty(object)); // true
+console.log(checkNotEmpty([])); // false
+console.log(checkNotEmpty({})); // false
