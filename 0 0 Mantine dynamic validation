@@ -1,0 +1,106 @@
+If the structure of the `address` object is dynamic and the fields are not fixed, you can write a generic validation logic that dynamically iterates over the keys and validates each field. Here's how you can do this:
+
+### Dynamic Validation for a Nested Object
+
+1. **Setup the Form with Dynamic Fields**:
+   You can still initialize the form without hardcoding specific fields.
+
+   ```javascript
+   import { useForm } from '@mantine/form';
+
+   const form = useForm({
+     initialValues: {
+       address: {}, // Initially empty, dynamic keys will be added later
+     },
+   });
+   ```
+
+2. **Dynamic Validation Logic**:
+   Write a validation function that iterates over the keys of the object and applies custom validation rules based on the field type or requirements.
+
+   ```javascript
+   const validateDynamicObject = (obj) => {
+     const errors = {};
+
+     Object.keys(obj).forEach((key) => {
+       const value = obj[key];
+
+       // Example rules (customize based on your needs)
+       if (!value || value.trim() === '') {
+         errors[key] = `${key} is required`;
+       } else if (key === 'postalCode' && !/^\d{5}$/.test(value)) {
+         errors[key] = `${key} must be a valid 5-digit number`;
+       }
+     });
+
+     return Object.keys(errors).length > 0 ? errors : null;
+   };
+   ```
+
+3. **Integrate Validation into `useForm`**:
+   Pass the dynamic validation logic to the `validate` option in `useForm`.
+
+   ```javascript
+   const form = useForm({
+     initialValues: {
+       address: {}, // Leave it empty initially
+     },
+     validate: {
+       address: (value) => {
+         const errors = validateDynamicObject(value || {});
+         return errors ? 'Address validation failed' : null;
+       },
+     },
+   });
+   ```
+
+4. **Load Dynamic Fields from Backend**:
+   Populate the form dynamically when the backend data is received.
+
+   ```javascript
+   const fetchDataFromBackend = async () => {
+     const backendData = await fetch('/api/get-address'); // Example API call
+     const { address } = await backendData.json();
+
+     form.setFieldValue('address', address);
+   };
+
+   useEffect(() => {
+     fetchDataFromBackend();
+   }, []);
+   ```
+
+5. **Render the Form Dynamically**:
+   Render form fields based on the keys of the `address` object dynamically.
+
+   ```javascript
+   return (
+     <form onSubmit={form.onSubmit((values) => console.log(values))}>
+       {Object.keys(form.values.address || {}).map((key) => (
+         <div key={key}>
+           <label>{key}</label>
+           <input
+             {...form.getInputProps(`address.${key}`)}
+             placeholder={key}
+           />
+           {form.errors.address?.[key] && (
+             <span>{form.errors.address[key]}</span>
+           )}
+         </div>
+       ))}
+       <button type="submit">Submit</button>
+     </form>
+   );
+   ```
+
+6. **Validation on Submit**:
+   When submitting, the form will validate all the dynamically added fields using the `validateDynamicObject` logic.
+
+### Advantages of This Approach:
+1. **No Hardcoding**: The logic adapts to the keys dynamically, making it suitable for unpredictable structures.
+2. **Custom Rules**: You can extend the `validateDynamicObject` function to handle specific requirements for different field types.
+3. **Dynamic UI Rendering**: The form adjusts dynamically based on the received backend data.
+
+### Key Notes:
+- **Default Values**: If the backend returns partial data, you may need to provide default values to avoid `undefined` errors.
+- **Field Names**: Ensure that field names from the backend are user-friendly or use a mapping mechanism to display readable labels.
