@@ -1,0 +1,32 @@
+import pandas as pd
+
+# Simulating the Excel input data
+data = {
+    'A': ['ID1', 'Name', 'Alice', 'Age', 25, 'City', 'NY'],
+    'B': ['ID2', 'Name', 'Bob', 'Age', 30, 'City', 'LA'],
+    'C': ['ID3', 'Name', 'Charlie', 'Age', 35, 'City', 'Chicago']
+}
+
+# Convert to DataFrame
+df = pd.DataFrame(data)
+
+# Initialize an empty list to store the transformed data
+transformed_data = []
+
+# Iterate through each column (ID)
+for col in df.columns:
+    id_value = df[col][0]  # First row is the ID
+    # Iterate in pairs (property, value)
+    for i in range(1, len(df[col]), 2):
+        property_name = df[col][i]
+        property_value = df[col][i + 1]
+        # Append as a tuple
+        transformed_data.append([id_value, property_name, property_value])
+
+# Convert the transformed data to a DataFrame
+result_df = pd.DataFrame(transformed_data, columns=['ID', 'Property', 'Value'])
+
+# Save to Excel (optional)
+result_df.to_excel('transformed_output.xlsx', index=False)
+
+print(result_df)
