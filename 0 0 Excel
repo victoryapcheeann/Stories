@@ -1,8 +1,8 @@
 import pandas as pd
 
-# Load the Excel file with all sheets
+# Load the Excel file
 file_path = 'input.xlsx'  # Replace with your file path
-excel_data = pd.read_excel(file_path, sheet_name=None, header=None)  # Load all sheets
+excel_data = pd.read_excel(file_path, sheet_name=None, header=None)
 
 # Dictionary to store transformed data for each sheet
 transformed_sheets = {}
@@ -11,26 +11,28 @@ transformed_sheets = {}
 for sheet_name, df in excel_data.items():
     transformed_data = []
 
-    # Iterate through each column starting from the third column to skip the extra column
+    # Iterate through each ID column starting from the third column
     for col in df.columns[2:]:
-        id_value = df.iloc[0, col]      # ID1, ID2, ID3
-        type_value = df.iloc[1, col]    # Type (A, B, C)
+        id_value = df.iloc[0, col]  # ID (ID1, ID2, ID3)
 
-        # Loop through the property-value pairs
-        for i in range(2, len(df)):
-            property_name = df.iloc[i, 1]  # Property names (Name, Age, City)
-            property_value = df.iloc[i, col]  # Corresponding values
+        # Loop through each property and type value
+        for i in range(1, len(df)):
+            property_name = df.iloc[i, 0]      # Property names (Name, Age, City)
+            type_value = df.iloc[i, 1]         # Type values (X001, X002, X003)
+            property_value = df.iloc[i, col]   # Corresponding values
+
+            # Append the data row
             transformed_data.append([id_value, type_value, property_name, property_value])
 
-    # Convert the transformed data into a DataFrame
+    # Convert the data to a DataFrame
     transformed_df = pd.DataFrame(transformed_data, columns=['ID', 'Type', 'Property', 'Value'])
-    
-    # Store the transformed sheet
+
+    # Store the transformed data
     transformed_sheets[sheet_name] = transformed_df
 
 # Save all transformed sheets into a new Excel file
-with pd.ExcelWriter('transformed_with_extra_column.xlsx') as writer:
+with pd.ExcelWriter('final_transformed_with_type.xlsx') as writer:
     for sheet_name, transformed_df in transformed_sheets.items():
         transformed_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-print("Transformation complete! Check 'transformed_with_extra_column.xlsx'.")
+print("Transformation complete! Check 'final_transformed_with_type.xlsx'.")
