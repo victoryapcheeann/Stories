@@ -31,8 +31,3 @@ with pd.ExcelWriter('transformed_multiple_sheets.xlsx') as writer:
         transformed_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 print("Transformation complete! Check 'transformed_multiple_sheets.xlsx'.")
-
-# Save to Excel (optional)
-result_df.to_excel('transformed_output.xlsx', index=False)
-
-print(result_df)
