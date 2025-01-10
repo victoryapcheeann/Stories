@@ -1,30 +1,36 @@
 import pandas as pd
 
-# Simulating the Excel input data
-data = {
-    'A': ['ID1', 'Name', 'Alice', 'Age', 25, 'City', 'NY'],
-    'B': ['ID2', 'Name', 'Bob', 'Age', 30, 'City', 'LA'],
-    'C': ['ID3', 'Name', 'Charlie', 'Age', 35, 'City', 'Chicago']
-}
+# Load the Excel file with all sheets
+file_path = 'input.xlsx'  # Replace with your file path
+excel_data = pd.read_excel(file_path, sheet_name=None, header=None)  # Load all sheets
 
-# Convert to DataFrame
-df = pd.DataFrame(data)
+# Create a dictionary to store transformed data for each sheet
+transformed_sheets = {}
 
-# Initialize an empty list to store the transformed data
-transformed_data = []
+# Loop through each sheet
+for sheet_name, df in excel_data.items():
+    transformed_data = []
 
-# Iterate through each column (ID)
-for col in df.columns:
-    id_value = df[col][0]  # First row is the ID
-    # Iterate in pairs (property, value)
-    for i in range(1, len(df[col]), 2):
-        property_name = df[col][i]
-        property_value = df[col][i + 1]
-        # Append as a tuple
-        transformed_data.append([id_value, property_name, property_value])
+    # Iterate through each column (IDs)
+    for col in df.columns[1:]:  # Skip the first column (properties)
+        id_value = df.iloc[1, col]  # First row contains IDs (ID1, ID2, ...)
 
-# Convert the transformed data to a DataFrame
-result_df = pd.DataFrame(transformed_data, columns=['ID', 'Property', 'Value'])
+        # Loop through each property-value pair
+        for i in range(2, len(df)):
+            property_name = df.iloc[i, 0]   # Property name from the first column
+            property_value = df.iloc[i, col]  # Corresponding value
+            transformed_data.append([id_value, property_name, property_value])
+
+    # Convert the transformed data to a DataFrame
+    transformed_df = pd.DataFrame(transformed_data, columns=['ID', 'Property', 'Value'])
+    transformed_sheets[sheet_name] = transformed_df  # Store the transformed sheet
+
+# Save all transformed sheets into a new Excel file
+with pd.ExcelWriter('transformed_multiple_sheets.xlsx') as writer:
+    for sheet_name, transformed_df in transformed_sheets.items():
+        transformed_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+print("Transformation complete! Check 'transformed_multiple_sheets.xlsx'.")
 
 # Save to Excel (optional)
 result_df.to_excel('transformed_output.xlsx', index=False)
