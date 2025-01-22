@@ -1,47 +1,21 @@
-type Primitive = string | number | boolean | null | undefined | bigint | symbol;
-type Cleanable = Primitive | Date | Cleanable[] | { [key: string]: Cleanable };
+import { useForm } from '@mantine/form';
 
-export const cleanValues = (value: Cleanable): Cleanable => {
-  // Define what is considered "empty"
-  const isEmpty = (val: any): boolean => {
-    if (val === undefined || val === null) return true; // Null or undefined
-    if (typeof val === 'string' && val.trim() === '') return true; // Empty strings
-    if (typeof val === 'number' && isNaN(val)) return true; // NaN
-    if (Array.isArray(val) && val.length === 0) return true; // Empty arrays
-    if (
-      typeof val === 'object' &&
-      !(val instanceof Date) &&
-      val !== null &&
-      Object.keys(val).length === 0
-    ) {
-      return true; // Empty objects (not including Dates)
-    }
-    return false; // All other cases
-  };
-
-  // Clean values recursively
-  if (Array.isArray(value)) {
+// Recursive cleaner to remove empty spaces
+const cleanEmptySpaces = (value: any): any => {
+  if (typeof value === 'string') {
+    return value.trim(); // Trim strings
+  } else if (Array.isArray(value)) {
     return value
-      .filter((item) => !isEmpty(item))
-      .map((item) => cleanValues(item));
-  } else if (typeof value === 'object' && value !== null) {
-    if (value instanceof Date) {
-      return isNaN(value.getTime()) ? undefined : value; // Keep valid dates
-    }
-    if (typeof value === 'bigint' || typeof value === 'symbol') {
-      return value; // Preserve BigInt and Symbol
-    }
+      .map(cleanEmptySpaces) // Clean each item in the array
+      .filter((item) => item !== ''); // Remove empty strings
+  } else if (value !== null && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value)
-        .map(([key, val]) => [key, cleanValues(val)])
-        .filter(([_, val]) => !isEmpty(val)) // Remove empty key-value pairs
+        .map(([key, val]) => [key, cleanEmptySpaces(val)]) // Clean each value in the object
+        .filter(([_, val]) => val !== '') // Remove empty string values
     );
-  } else if (typeof value === 'string') {
-    return value.trim() === '' ? undefined : value.trim(); // Trim and clean strings
-  } else if (typeof value === 'number' || typeof value === 'boolean') {
-    return value; // Keep valid numbers and booleans
   }
-
-  // Return all other valid primitive values
-  return value !== null && value !== undefined ? value : undefined;
+  return value; // Return the value as is for non-strings/arrays/objects
 };
+
+ transformValues: (values) => cleanEmptySpaces(values),
