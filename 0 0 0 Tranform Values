@@ -1,77 +1,47 @@
-const form = useForm({
-  initialValues: {
-    name: ' ',
-    email: '   ',
-    age: 0, // Valid number
-    tags: [' ', 'tag1', 42, null, undefined], // Mixed values
-    hobbies: ['reading', ' ', '', false], // Array with mixed values
-    nested: {
-      field: ' ',
-      list: ['item1', ' ', 'item2', 100], // Nested list
-      deepNested: {
-        emptyArray: [],
-        valid: 'value',
-        invalid: undefined,
-      },
-    },
-    dateField: new Date('2025-01-01'),
-    invalidDate: new Date('Invalid'), // Invalid date
-    bigIntValue: BigInt(12345678901234567890),
-    symbolValue: Symbol('test'),
-  },
+type Primitive = string | number | boolean | null | undefined | bigint | symbol;
+type Cleanable = Primitive | Date | Cleanable[] | { [key: string]: Cleanable };
 
-  transformValues: (values) => {
-    // Define what is considered "empty"
-    const isEmpty = (value) => {
-      if (value === undefined || value === null) return true; // Null or undefined
-      if (typeof value === 'string' && value.trim() === '') return true; // Empty strings
-      if (typeof value === 'number' && isNaN(value)) return true; // NaN
-      if (Array.isArray(value) && value.length === 0) return true; // Empty arrays
-      if (
-        typeof value === 'object' &&
-        value !== null &&
-        !(value instanceof Date) &&
-        Object.keys(value).length === 0
-      ) {
-        return true; // Empty objects (not including Dates)
-      }
-      return false; // All other cases
-    };
+export const cleanValues = (value: Cleanable): Cleanable => {
+  // Define what is considered "empty"
+  const isEmpty = (val: any): boolean => {
+    if (val === undefined || val === null) return true; // Null or undefined
+    if (typeof val === 'string' && val.trim() === '') return true; // Empty strings
+    if (typeof val === 'number' && isNaN(val)) return true; // NaN
+    if (Array.isArray(val) && val.length === 0) return true; // Empty arrays
+    if (
+      typeof val === 'object' &&
+      !(val instanceof Date) &&
+      val !== null &&
+      Object.keys(val).length === 0
+    ) {
+      return true; // Empty objects (not including Dates)
+    }
+    return false; // All other cases
+  };
 
-    // Recursive cleaning function
-    const cleanValues = (value) => {
-      if (Array.isArray(value)) {
-        // Clean arrays: Filter out empty values and clean recursively
-        return value
-          .filter((item) => !isEmpty(item))
-          .map(cleanValues);
-      } else if (typeof value === 'object' && value !== null) {
-        if (value instanceof Date) {
-          // Validate dates
-          return isNaN(value.getTime()) ? undefined : value;
-        }
-        if (typeof value === 'bigint' || typeof value === 'symbol') {
-          // Preserve BigInt and Symbol values
-          return value;
-        }
-        // Clean objects recursively
-        return Object.fromEntries(
-          Object.entries(value)
-            .map(([key, val]) => [key, cleanValues(val)])
-            .filter(([_, val]) => !isEmpty(val)) // Remove empty key-value pairs
-        );
-      }
-      // Handle primitive values
-      if (typeof value === 'string') {
-        return value.trim() === '' ? undefined : value.trim(); // Trim strings
-      }
-      if (typeof value === 'number' || typeof value === 'boolean') {
-        return value; // Keep valid numbers and booleans
-      }
-      return value !== null && value !== undefined ? value : undefined; // Preserve all other valid types
-    };
+  // Clean values recursively
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => !isEmpty(item))
+      .map((item) => cleanValues(item));
+  } else if (typeof value === 'object' && value !== null) {
+    if (value instanceof Date) {
+      return isNaN(value.getTime()) ? undefined : value; // Keep valid dates
+    }
+    if (typeof value === 'bigint' || typeof value === 'symbol') {
+      return value; // Preserve BigInt and Symbol
+    }
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([key, val]) => [key, cleanValues(val)])
+        .filter(([_, val]) => !isEmpty(val)) // Remove empty key-value pairs
+    );
+  } else if (typeof value === 'string') {
+    return value.trim() === '' ? undefined : value.trim(); // Trim and clean strings
+  } else if (typeof value === 'number' || typeof value === 'boolean') {
+    return value; // Keep valid numbers and booleans
+  }
 
-    // Apply cleaning function to the form values
-    return cleanValues(values);
-  },
-});
+  // Return all other valid primitive values
+  return value !== null && value !== undefined ? value : undefined;
+};
