@@ -1,0 +1,42 @@
+import { useForm } from '@mantine/form';
+import * as yup from 'yup';
+import { useState, useEffect } from 'react';
+
+export default function DynamicValidationForm() {
+  const [validationSchema, setValidationSchema] = useState(() =>
+    yup.object({
+      email: yup.string().email('Invalid email').required('Required'),
+      age: yup.number().min(18, 'Must be at least 18'),
+    })
+  );
+
+  const form = useForm({
+    initialValues: {
+      email: '',
+      age: '',
+    },
+    validate: validationSchema.validateSync,
+  });
+
+  useEffect(() => {
+    // Simulate API call to fetch new validation rules
+    setTimeout(() => {
+      setValidationSchema(
+        yup.object({
+          email: yup.string().email('Invalid email').required('Email is required'),
+          age: yup.number().min(21, 'Now minimum age is 21'), // Updated rule from API
+        })
+      );
+    }, 2000);
+  }, []);
+
+  return (
+    <form onSubmit={form.onSubmit((values) => console.log(values))}>
+      <input {...form.getInputProps('email')} placeholder="Email" />
+      <input type="number" {...form.getInputProps('age')} placeholder="Age" />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+
+email: yup.string().required('Email is required')
