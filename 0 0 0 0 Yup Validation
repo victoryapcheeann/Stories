@@ -1,3 +1,63 @@
+import * as Yup from 'yup';
+
+// Sample object
+const product = {
+  id: { 
+    value: 1, 
+    rational: "Unique identifier for the product", 
+    urlLink: "https://example.com/products/1" 
+  },
+  name: { 
+    value: "Laptop", 
+    rational: "Name of the product", 
+    urlLink: "https://example.com/products/laptop" 
+  },
+  price: { 
+    value: 1200, 
+    rational: "Price of the product in USD", 
+    urlLink: "https://example.com/products/laptop/price" 
+  }
+};
+
+// Dynamic schema generator
+const generateYupSchema = (obj) => {
+  const shape = {};
+
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      shape[key] = Yup.object().shape({
+        value: Yup.mixed().required(`${key}.value is required`),       // Dynamic required field
+        rational: Yup.string().required(`${key}.rational is required`), // Rational should always be a string
+        urlLink: Yup.string().url(`${key}.urlLink must be a valid URL`).required(`${key}.urlLink is required`),
+      });
+    }
+  }
+
+  return Yup.object().shape(shape);
+};
+
+// Generate schema dynamically
+const productSchema = generateYupSchema(product);
+
+// Example validation
+const invalidProduct = {
+  id: { value: '', rational: '', urlLink: 'invalid-url' },
+  name: { value: 'Laptop', rational: '', urlLink: 'https://example.com/products/laptop' },
+  price: { value: '', rational: 'Price in USD', urlLink: '' }
+};
+
+productSchema.validate(invalidProduct, { abortEarly: false })
+  .then(() => {
+    console.log("Validation passed!");
+  })
+  .catch((err) => {
+    console.log("Validation errors:", err.errors);
+  });
+
+
+
+
+
 import { useForm } from '@mantine/form';
 import * as yup from 'yup';
 import { useState, useEffect } from 'react';
