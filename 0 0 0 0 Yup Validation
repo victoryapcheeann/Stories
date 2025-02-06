@@ -1,3 +1,62 @@
+import * as Yup from "yup";
+import { generateYupSchema } from "./generateYupSchema"; // Adjust path if needed
+
+describe("generateYupSchema", () => {
+  let schema;
+
+  beforeEach(() => {
+    const inputObj = {
+      field1: {},
+      field2: {},
+    };
+    schema = generateYupSchema(inputObj);
+  });
+
+  test("generates a schema with required fields", async () => {
+    expect(schema).toBeInstanceOf(Yup.ObjectSchema);
+
+    const validData = {
+      field1: { value: "some value", rational: "valid reason", urlLink: "https://example.com" },
+      field2: { value: 123, rational: "another reason", urlLink: "https://test.com" },
+    };
+
+    await expect(schema.validate(validData)).resolves.toBeTruthy();
+  });
+
+  test("fails validation when required fields are missing", async () => {
+    const invalidData = {
+      field1: { value: "", rational: "", urlLink: "invalid-url" }, // Missing required values
+      field2: { rational: "valid", urlLink: "https://example.com" }, // Missing `value`
+    };
+
+    await expect(schema.validate(invalidData)).rejects.toThrow(
+      /field1.value is required|field1.rational is required|field1.urlLink must be a valid URL|field2.value is required/
+    );
+  });
+
+  test("fails validation when urlLink is not a valid URL", async () => {
+    const invalidData = {
+      field1: { value: "valid", rational: "reason", urlLink: "not-a-url" },
+      field2: { value: 123, rational: "valid", urlLink: "https://valid.com" },
+    };
+
+    await expect(schema.validate(invalidData)).rejects.toThrow(/field1.urlLink must be a valid URL/);
+  });
+
+  test("allows different types for value field", async () => {
+    const validData = {
+      field1: { value: 42, rational: "valid reason", urlLink: "https://example.com" }, // Number
+      field2: { value: true, rational: "another valid reason", urlLink: "https://test.com" }, // Boolean
+    };
+
+    await expect(schema.validate(validData)).resolves.toBeTruthy();
+  });
+});
+
+
+
+
+
 const re = /^((ftp|http|https):\/\/)?(www.)?(?!.*(ftp|http|https|www.))[a-zA-Z0-9_-]+(\.[a-zA-Z]+)+((\/)[\w#]+)*(\/\w+\?[a-zA-Z0-9_]+=\w+(&[a-zA-Z0-9_]+=\w+)*)?$/gm
 
 Yup.string().matches(re,'URL is not valid')
