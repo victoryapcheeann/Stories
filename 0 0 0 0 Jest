@@ -1,3 +1,33 @@
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import MyComponent from "./MyComponent";
+
+// Mock useParams from react-router-dom
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useParams: jest.fn()
+}));
+
+test("renders the page with a mocked route param", () => {
+  // Define a mock parameter
+  (require("react-router-dom").useParams as jest.Mock).mockReturnValue({ id: "123" });
+
+  render(
+    <MemoryRouter>
+      <MyComponent />
+    </MemoryRouter>
+  );
+
+  // Verify that the mocked parameter is used
+  expect(screen.getByText("Page ID: 123")).toBeInTheDocument();
+});
+
+
+
+
+
+
 To ensure Jest is correctly set up to run with TypeScript and JSX (`.tsx`), you need to update the **`package.json`** with the correct Jest configuration.
 
 ---
