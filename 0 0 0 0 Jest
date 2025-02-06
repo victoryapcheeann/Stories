@@ -1,25 +1,23 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import MyComponent from "./MyComponent";
 
-// Mock useParams from react-router-dom
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
-  useParams: jest.fn()
+// Mock useRouter from Next.js
+jest.mock("next/router", () => ({
+  useRouter: jest.fn()
 }));
 
-test("renders the page with a mocked route param", () => {
-  // Define a mock parameter
-  (require("react-router-dom").useParams as jest.Mock).mockReturnValue({ id: "123" });
+test("renders the page with a mocked router query param", () => {
+  // Mock router.query to return an ID
+  require("next/router").useRouter.mockReturnValue({
+    query: { id: "123" },
+    push: jest.fn(), // Mock push if needed
+    prefetch: jest.fn()
+  });
 
-  render(
-    <MemoryRouter>
-      <MyComponent />
-    </MemoryRouter>
-  );
+  render(<MyComponent />);
 
-  // Verify that the mocked parameter is used
+  // Check if it renders with the mocked ID
   expect(screen.getByText("Page ID: 123")).toBeInTheDocument();
 });
 
