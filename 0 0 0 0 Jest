@@ -1,0 +1,79 @@
+Ah, since **the file is TypeScript (`generateYupSchema.ts`)**, Jest might not be correctly detecting and instrumenting TypeScript files for coverage. You’ll need to ensure that Jest is properly configured for TypeScript.
+
+---
+
+## **✅ Fix: Ensure Jest is Configured for TypeScript**
+### **1. Install Required Packages (if not installed)**
+If you haven’t already, install Jest, TypeScript, and the necessary testing libraries:
+```bash
+npm install --save-dev jest ts-jest @types/jest
+```
+
+---
+
+### **2. Update Jest Configuration**
+Modify your `jest.config.js` (or create one in the root directory if it doesn’t exist):
+
+#### **For Jest Configuration in `jest.config.js`**
+```javascript
+module.exports = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  collectCoverage: true,
+  collectCoverageFrom: [
+    "src/**/*.ts", // Ensure TypeScript files are included in coverage
+    "!src/**/index.ts", // Exclude index.ts files
+    "!src/**/*.test.ts", // Exclude test files
+  ],
+  coverageReporters: ["json", "lcov", "text", "clover"],
+};
+```
+
+- **`preset: "ts-jest"`** → Ensures Jest can process TypeScript.
+- **`collectCoverageFrom`** → Ensures only **source files** are included in the coverage, not test files.
+
+---
+
+### **3. Ensure Correct Import in the Test File**
+Check your `generateYupSchema.test.ts` file:
+```typescript
+import { generateYupSchema } from "./generateYupSchema"; // Ensure correct path
+
+test("ensure function is defined", () => {
+  expect(generateYupSchema).toBeDefined();
+});
+```
+- Make sure you are importing the function correctly.
+- If Jest is still missing the file, this test ensures it is included in coverage.
+
+---
+
+### **4. Run Jest with Coverage**
+Now, run the tests with:
+```bash
+npx jest --coverage
+```
+
+### **Expected Fix**
+✅ Jest should now correctly show **coverage for `generateYupSchema.ts`**, not the test file.
+
+---
+
+## **🚀 Final Debugging (if it still doesn’t work)**
+If Jest still reports coverage for `generateYupSchema.test.ts` instead of `generateYupSchema.ts`, try:
+1. **Check TypeScript Compilation Issues**: Run `tsc` to ensure no compilation errors.
+2. **Run Jest in Debug Mode**:
+   ```bash
+   npx jest --no-cache --coverage
+   ```
+3. **Manually Add `generateYupSchema.ts` in a Dummy Test**:
+   ```typescript
+   import { generateYupSchema } from "./generateYupSchema";
+
+   test("force include file", () => {
+     expect(generateYupSchema).toBeDefined();
+   });
+   ```
+   This forces Jest to include the file in coverage.
+
+Let me know if it's still giving you trouble! 🚀
